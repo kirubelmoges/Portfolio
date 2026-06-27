@@ -161,9 +161,15 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+<<<<<<< HEAD
     "https://your-frontend.vercel.app",  # Update after Vercel deployment
     "https://your-frontend-git-main.vercel.app",
     "https://portfolio-*.vercel.app",  # Preview deployments
+=======
+    "https://portfolio-aerdwk2w2-kirubelmoges-5648s-projects.vercel.app/",  # Update after Vercel deployment
+    "https://your-frontend-git-main.vercel.app",
+    "https://portfolio-*.vercel.app",# Preview deployments
+>>>>>>> 761d869f309e86405e4510d8c7a8abce86e77be9
 ]
 
 CORS_ALLOW_CREDENTIALS = True

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
-const MEDIA_URL = process.env.REACT_APP_MEDIA_URL || 'https://portfolio-backend-ee1z.onrender.com';
+const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
+const MEDIA_URL = 'https://portfolio-backend-ee1z.onrender.com';
 
 const App1 = () => {
   const [portfolio, setPortfolio] = useState({
@@ -285,7 +285,7 @@ const App1 = () => {
     setSubmitStatus(null);
     
     try {
-      const response = await fetch('http://localhost:8000/kirubel/api/send-hire-email/', {
+      const response = await fetch(`${API_BASE_URL}/send-hire-email/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1170,7 +1170,7 @@ const ContactForm = () => {
     setSubmitStatus(null);
     
     try {
-      const response = await fetch('http://localhost:8000/kirubel/api/contact/', {
+      const response = await fetch(`${API_BASE_URL}/contact/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

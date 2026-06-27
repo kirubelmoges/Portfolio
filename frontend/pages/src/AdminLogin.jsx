@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Shield } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com';
 
 const AdminLogin = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -45,7 +45,7 @@ const AdminLogin = ({ onLogin }) => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Network error. Please make sure the server is running on port 8000');
+      setError('Network error. Please make sure the server is running');
     } finally {
       setLoading(false);
     }

@@ -23,7 +23,7 @@ function App() {
 
   const verifyToken = async (token) => {
     try {
-      const response = await fetch('http://localhost:8000/kirubel/api/verify-token/', {
+      const response = await fetch('https://portfolio-backend-ee1z.onrender.com/kirubel/api/verify-token/', {
         headers: { 'Authorization': `Token ${token}` }
       });
       setIsAuthenticated(response.ok);

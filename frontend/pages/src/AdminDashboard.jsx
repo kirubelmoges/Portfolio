@@ -7,8 +7,8 @@ import {
   FileCheck
 } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8000/kirubel/api';
-const MEDIA_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
+const MEDIA_URL = 'https://portfolio-backend-ee1z.onrender.com';
 
 const AdminDashboard = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('introduction');
