@@ -162,7 +162,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://your-frontend.vercel.app",  # Update after Vercel deployment
-    "https://your-frontend-git-main.vercel.app",  # Preview deployments
+    "https://your-frontend-git-main.vercel.app",
+    "https://portfolio-*.vercel.app",  # Preview deployments
 ]
 
 CORS_ALLOW_CREDENTIALS = True
