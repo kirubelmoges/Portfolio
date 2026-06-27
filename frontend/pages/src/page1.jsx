@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-const API_BASE_URL = 'http://localhost:8000/kirubel/api';
-const MEDIA_URL = 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
+const MEDIA_URL = process.env.REACT_APP_MEDIA_URL || 'https://portfolio-backend-ee1z.onrender.com';
 
 const App1 = () => {
   const [portfolio, setPortfolio] = useState({
