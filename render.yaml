@@ -1,8 +1,9 @@
 services:
+  # Backend Service
   - type: web
     name: portfolio-backend
     env: python
-    buildCommand: ./build.sh
+    buildCommand: cd backend && ./build.sh
     startCommand: cd backend && gunicorn portfolio.wsgi:application
     envVars:
       - key: DJANGO_SECRET_KEY
@@ -21,3 +22,22 @@ services:
         sync: false
       - key: MYSQL_PASSWORD
         sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: CONTACT_EMAIL
+        sync: false
+
+  # Frontend Static Site
+  - type: static
+    name: portfolio-frontend
+    buildCommand: cd frontend/pages && npm install && npm run build
+    publishPath: frontend/pages/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://portfolio-backend.onrender.com/kirubel/api
+      - key: REACT_APP_MEDIA_URL
+        value: https://portfolio-backend.onrender.com
+      - key: CI
+        value: false
