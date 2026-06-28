@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
 const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
@@ -39,6 +39,7 @@ const App1 = () => {
   const [projectIndex, setProjectIndex] = useState(0);
   const [certIndex, setCertIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [itemsPerView, setItemsPerView] = useState(3);
   const projectAutoRef = useRef(null);
   const certAutoRef = useRef(null);
   const projectSliderRef = useRef(null);
@@ -61,6 +62,19 @@ const App1 = () => {
     fetchFullPortfolio();
   }, []);
 
+  // Get items per view based on screen width
+  useEffect(() => {
+    const updateItemsPerView = () => {
+      const width = window.innerWidth;
+      if (width < 640) setItemsPerView(1);
+      else if (width < 1024) setItemsPerView(2);
+      else setItemsPerView(3);
+    };
+    updateItemsPerView();
+    window.addEventListener('resize', updateItemsPerView);
+    return () => window.removeEventListener('resize', updateItemsPerView);
+  }, []);
+
   // Auto-slide for projects carousel
   useEffect(() => {
     if (portfolio.projects?.length > 1 && !isPaused) {
@@ -73,9 +87,13 @@ const App1 = () => {
 
   // Auto-slide for certificates carousel
   useEffect(() => {
-    if (portfolio.certificates?.length > 1 && !isPaused) {
+    const filteredCerts = portfolio.certificates?.filter(cert => 
+      !cert.certificate_name?.toLowerCase().includes('resume') && 
+      !cert.certificate_name?.toLowerCase().includes('cv')
+    ) || [];
+    if (filteredCerts.length > 1 && !isPaused) {
       certAutoRef.current = setInterval(() => {
-        setCertIndex((prev) => (prev + 1) % portfolio.certificates.length);
+        setCertIndex((prev) => (prev + 1) % filteredCerts.length);
       }, 3000);
     }
     return () => clearInterval(certAutoRef.current);
@@ -331,19 +349,25 @@ const App1 = () => {
   // Carousel navigation
   const goToPrev = (type) => {
     setIsPaused(true);
-    if (type === 'projects') {
+    if (type === 'projects' && portfolio.projects?.length > 0) {
       setProjectIndex((prev) => (prev - 1 + portfolio.projects.length) % portfolio.projects.length);
     } else if (type === 'certificates') {
-      setCertIndex((prev) => (prev - 1 + portfolio.certificates.length) % portfolio.certificates.length);
+      const filtered = getFilteredCertificates();
+      if (filtered.length > 0) {
+        setCertIndex((prev) => (prev - 1 + filtered.length) % filtered.length);
+      }
     }
   };
 
   const goToNext = (type) => {
     setIsPaused(true);
-    if (type === 'projects') {
+    if (type === 'projects' && portfolio.projects?.length > 0) {
       setProjectIndex((prev) => (prev + 1) % portfolio.projects.length);
     } else if (type === 'certificates') {
-      setCertIndex((prev) => (prev + 1) % portfolio.certificates.length);
+      const filtered = getFilteredCertificates();
+      if (filtered.length > 0) {
+        setCertIndex((prev) => (prev + 1) % filtered.length);
+      }
     }
   };
 
@@ -356,7 +380,14 @@ const App1 = () => {
     }
   };
 
-  const getVisibleItems = (items, currentIndex, itemsPerView) => {
+  const getFilteredCertificates = () => {
+    return portfolio.certificates?.filter(cert => 
+      !cert.certificate_name?.toLowerCase().includes('resume') && 
+      !cert.certificate_name?.toLowerCase().includes('cv')
+    ) || [];
+  };
+
+  const getVisibleItems = (items, currentIndex) => {
     if (!items || items.length === 0) return [];
     const count = Math.min(itemsPerView, items.length);
     const visible = [];
@@ -534,24 +565,9 @@ const App1 = () => {
     );
   }
 
-  // Get items per view based on screen width
-  const getItemsPerView = () => {
-    const width = window.innerWidth;
-    if (width < 640) return 1;
-    if (width < 1024) return 2;
-    return 3;
-  };
-
-  const itemsPerView = getItemsPerView();
-  const visibleProjects = getVisibleItems(portfolio.projects, projectIndex, itemsPerView);
-  const visibleCertificates = getVisibleItems(
-    portfolio.certificates?.filter(cert => 
-      !cert.certificate_name?.toLowerCase().includes('resume') && 
-      !cert.certificate_name?.toLowerCase().includes('cv')
-    ) || [], 
-    certIndex, 
-    itemsPerView
-  );
+  const filteredCertificates = getFilteredCertificates();
+  const visibleProjects = getVisibleItems(portfolio.projects, projectIndex);
+  const visibleCertificates = getVisibleItems(filteredCertificates, certIndex);
 
   return (
     <div className="bg-white">
@@ -736,26 +752,28 @@ const App1 = () => {
           <div className="container mx-auto px-6">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900">Featured Projects</h2>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => goToPrev('projects')}
-                  aria-label="Previous slide"
-                  className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
-                >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button 
-                  onClick={() => goToNext('projects')}
-                  aria-label="Next slide"
-                  className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
-                >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
+              {portfolio.projects.length > 1 && (
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => goToPrev('projects')}
+                    aria-label="Previous slide"
+                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
+                  >
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button 
+                    onClick={() => goToNext('projects')}
+                    aria-label="Next slide"
+                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
+                  >
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           
@@ -763,24 +781,32 @@ const App1 = () => {
           <div className="relative w-full px-4">
             <div 
               ref={projectSliderRef}
-              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory"
+              className={`flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory ${
+                portfolio.projects.length === 1 ? 'justify-center' : ''
+              }`}
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
             >
-              {visibleProjects.map((project, idx) => (
-                <div 
-                  key={idx} 
-                  className={`min-w-[280px] md:min-w-[320px] lg:min-w-[360px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
-                    project.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
-                  }`}
-                  style={{
-                    transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
-                  }}
-                >
-                  {renderProjectCard(project, project.isCenter)}
+              {portfolio.projects.length === 1 ? (
+                <div className="min-w-[280px] md:min-w-[380px] max-w-[380px] flex-shrink-0">
+                  {renderProjectCard(portfolio.projects[0], true)}
                 </div>
-              ))}
+              ) : (
+                visibleProjects.map((project, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`min-w-[280px] md:min-w-[320px] lg:min-w-[360px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
+                      project.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
+                    }`}
+                    style={{
+                      transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                    }}
+                  >
+                    {renderProjectCard(project, project.isCenter)}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -822,26 +848,28 @@ const App1 = () => {
           <div className="container mx-auto px-6">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900">Certificates</h2>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => goToPrev('certificates')}
-                  aria-label="Previous slide"
-                  className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
-                >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button 
-                  onClick={() => goToNext('certificates')}
-                  aria-label="Next slide"
-                  className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
-                >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
+              {visibleCertificates.length > 1 && (
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => goToPrev('certificates')}
+                    aria-label="Previous slide"
+                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
+                  >
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button 
+                    onClick={() => goToNext('certificates')}
+                    aria-label="Next slide"
+                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
+                  >
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -849,24 +877,32 @@ const App1 = () => {
           <div className="relative w-full px-4">
             <div 
               ref={certificateSliderRef}
-              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory"
+              className={`flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory ${
+                visibleCertificates.length === 1 ? 'justify-center' : ''
+              }`}
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
             >
-              {visibleCertificates.map((cert, idx) => (
-                <div 
-                  key={idx} 
-                  className={`min-w-[240px] md:min-w-[280px] lg:min-w-[320px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
-                    cert.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
-                  }`}
-                  style={{
-                    transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
-                  }}
-                >
-                  {renderCertificateCard(cert, cert.isCenter)}
+              {visibleCertificates.length === 1 ? (
+                <div className="min-w-[280px] md:min-w-[340px] max-w-[340px] flex-shrink-0">
+                  {renderCertificateCard(visibleCertificates[0], true)}
                 </div>
-              ))}
+              ) : (
+                visibleCertificates.map((cert, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`min-w-[240px] md:min-w-[280px] lg:min-w-[320px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
+                      cert.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
+                    }`}
+                    style={{
+                      transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                    }}
+                  >
+                    {renderCertificateCard(cert, cert.isCenter)}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
