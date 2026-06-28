@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 
 const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
@@ -35,11 +35,14 @@ const App1 = () => {
   const [downloadingResume, setDownloadingResume] = useState(false);
   const [downloadingCV, setDownloadingCV] = useState(false);
   
-  // Slider refs
+  // Carousel states
+  const [projectIndex, setProjectIndex] = useState(0);
+  const [certIndex, setCertIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const projectAutoRef = useRef(null);
+  const certAutoRef = useRef(null);
   const projectSliderRef = useRef(null);
   const certificateSliderRef = useRef(null);
-  const [projectScrollPos, setProjectScrollPos] = useState(0);
-  const [certScrollPos, setCertScrollPos] = useState(0);
 
   const sectionRefs = {
     home: useRef(null),
@@ -58,39 +61,32 @@ const App1 = () => {
     fetchFullPortfolio();
   }, []);
 
-  // Auto-slide for projects
+  // Auto-slide for projects carousel
   useEffect(() => {
-    if (portfolio.projects?.length > 0 && projectSliderRef.current) {
-      const interval = setInterval(() => {
-        const slider = projectSliderRef.current;
-        const maxScroll = slider.scrollWidth - slider.clientWidth;
-        let newPos = projectScrollPos + 380;
-        if (newPos >= maxScroll) {
-          newPos = 0;
-        }
-        slider.scrollTo({ left: newPos, behavior: 'smooth' });
-        setProjectScrollPos(newPos);
-      }, 5000);
-      return () => clearInterval(interval);
+    if (portfolio.projects?.length > 1 && !isPaused) {
+      projectAutoRef.current = setInterval(() => {
+        setProjectIndex((prev) => (prev + 1) % portfolio.projects.length);
+      }, 3000);
     }
-  }, [portfolio.projects, projectScrollPos]);
+    return () => clearInterval(projectAutoRef.current);
+  }, [portfolio.projects, isPaused]);
 
-  // Auto-slide for certificates
+  // Auto-slide for certificates carousel
   useEffect(() => {
-    if (portfolio.certificates?.length > 0 && certificateSliderRef.current) {
-      const interval = setInterval(() => {
-        const slider = certificateSliderRef.current;
-        const maxScroll = slider.scrollWidth - slider.clientWidth;
-        let newPos = certScrollPos + 320;
-        if (newPos >= maxScroll) {
-          newPos = 0;
-        }
-        slider.scrollTo({ left: newPos, behavior: 'smooth' });
-        setCertScrollPos(newPos);
-      }, 4000);
-      return () => clearInterval(interval);
+    if (portfolio.certificates?.length > 1 && !isPaused) {
+      certAutoRef.current = setInterval(() => {
+        setCertIndex((prev) => (prev + 1) % portfolio.certificates.length);
+      }, 3000);
     }
-  }, [portfolio.certificates, certScrollPos]);
+    return () => clearInterval(certAutoRef.current);
+  }, [portfolio.certificates, isPaused]);
+
+  // Pause on interaction, resume after 5 seconds
+  useEffect(() => {
+    if (!isPaused) return;
+    const timer = setTimeout(() => setIsPaused(false), 5000);
+    return () => clearTimeout(timer);
+  }, [isPaused]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -155,11 +151,9 @@ const App1 = () => {
     }
   };
 
-  // Helper function to get media URL (checks Cloudinary URLs first)
   const getMediaUrl = (item, fieldName) => {
     if (!item) return null;
     
-    // Map field names to Cloudinary URL fields
     const cloudinaryFields = {
       'image': 'image_url',
       'imagebackground': 'imagebackground_url',
@@ -176,7 +170,6 @@ const App1 = () => {
       return item[cloudinaryField];
     }
     
-    // Fallback to uploaded file
     if (item[fieldName]) {
       return getFileUrl(item[fieldName]);
     }
@@ -272,14 +265,6 @@ const App1 = () => {
     }
   };
 
-  const scrollSlider = (ref, direction, setPos) => {
-    if (ref.current) {
-      const scrollAmount = direction === 'left' ? -380 : 380;
-      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-      setPos(ref.current.scrollLeft + scrollAmount);
-    }
-  };
-
   const scrollToSection = (section) => {
     setActiveSection(section);
     setMobileMenuOpen(false);
@@ -343,6 +328,187 @@ const App1 = () => {
     }
   };
 
+  // Carousel navigation
+  const goToPrev = (type) => {
+    setIsPaused(true);
+    if (type === 'projects') {
+      setProjectIndex((prev) => (prev - 1 + portfolio.projects.length) % portfolio.projects.length);
+    } else if (type === 'certificates') {
+      setCertIndex((prev) => (prev - 1 + portfolio.certificates.length) % portfolio.certificates.length);
+    }
+  };
+
+  const goToNext = (type) => {
+    setIsPaused(true);
+    if (type === 'projects') {
+      setProjectIndex((prev) => (prev + 1) % portfolio.projects.length);
+    } else if (type === 'certificates') {
+      setCertIndex((prev) => (prev + 1) % portfolio.certificates.length);
+    }
+  };
+
+  const goToSlide = (type, index) => {
+    setIsPaused(true);
+    if (type === 'projects') {
+      setProjectIndex(index);
+    } else if (type === 'certificates') {
+      setCertIndex(index);
+    }
+  };
+
+  const getVisibleItems = (items, currentIndex, itemsPerView) => {
+    if (!items || items.length === 0) return [];
+    const count = Math.min(itemsPerView, items.length);
+    const visible = [];
+    for (let i = 0; i < count; i++) {
+      const idx = (currentIndex + i) % items.length;
+      const isCenter = i === Math.floor(count / 2);
+      visible.push({ ...items[idx], originalIndex: idx, isCenter });
+    }
+    return visible;
+  };
+
+  // Render project card
+  const renderProjectCard = (item, isCenter) => {
+    const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
+    const screenshotUrl = getMediaUrl(item, 'screenshots');
+    const videoUrl = getMediaUrl(item, 'video');
+
+    return (
+      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}>
+        {(screenshotUrl || videoUrl) && (
+          <div 
+            className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer"
+            onClick={() => {
+              if (videoUrl && !screenshotUrl) {
+                openVideoFullscreen(videoUrl, item.project_title);
+              } else if (screenshotUrl) {
+                openImageZoom(screenshotUrl, item.project_title);
+              }
+            }}
+          >
+            {screenshotUrl && (
+              <img
+                src={screenshotUrl}
+                alt={item.project_title}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                onError={(e) => {
+                  const fallback = item.screenshots;
+                  if (fallback) {
+                    e.target.src = getMediaUrl(item, 'screenshots');
+                  }
+                }}
+              />
+            )}
+            {!screenshotUrl && videoUrl && (
+              <video className="w-full h-full object-cover" src={videoUrl} />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30 transform scale-90 group-hover:scale-100 transition-transform duration-500">
+                {videoUrl && !screenshotUrl ? (
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            {videoUrl && (
+              <div className="absolute top-3 right-3 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                Video
+              </div>
+            )}
+          </div>
+        )}
+        <div className="p-6">
+          <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'}`}>
+            {item.project_title}
+          </h3>
+          <p className="text-gray-600 mb-4 line-clamp-3">{item.description}</p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {toolsList.slice(0, 4).map((tool, idx) => (
+              <span key={idx} className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50">
+                {tool}
+              </span>
+            ))}
+            {toolsList.length > 4 && (
+              <span className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50">
+                +{toolsList.length - 4}
+              </span>
+            )}
+          </div>
+          <div className="flex gap-4">
+            {item.github_link && (
+              <a href={item.github_link} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition">
+                GitHub
+              </a>
+            )}
+            {item.url && (
+              <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition">
+                Live Demo
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render certificate card
+  const renderCertificateCard = (cert, isCenter) => {
+    return (
+      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}>
+        {cert.certificate_image && (
+          <div 
+            className="relative h-48 overflow-hidden rounded-lg m-4 cursor-pointer group"
+            onClick={() => openImageZoom(getMediaUrl(cert, 'certificate_image'), cert.certificate_name)}
+          >
+            <img
+              src={getMediaUrl(cert, 'certificate_image')}
+              alt={cert.certificate_name}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              onError={(e) => {
+                const fallback = cert.certificate_image;
+                if (fallback) {
+                  e.target.src = getMediaUrl(cert, 'certificate_image');
+                }
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="p-6 pt-0">
+          <h3 className={`text-lg font-bold mb-1 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'}`}>
+            {cert.certificate_name}
+          </h3>
+          {cert.certificate_link && (
+            <a 
+              href={cert.certificate_link} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-block mt-3 text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
+            >
+              View Certificate →
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -367,6 +533,25 @@ const App1 = () => {
       </div>
     );
   }
+
+  // Get items per view based on screen width
+  const getItemsPerView = () => {
+    const width = window.innerWidth;
+    if (width < 640) return 1;
+    if (width < 1024) return 2;
+    return 3;
+  };
+
+  const itemsPerView = getItemsPerView();
+  const visibleProjects = getVisibleItems(portfolio.projects, projectIndex, itemsPerView);
+  const visibleCertificates = getVisibleItems(
+    portfolio.certificates?.filter(cert => 
+      !cert.certificate_name?.toLowerCase().includes('resume') && 
+      !cert.certificate_name?.toLowerCase().includes('cv')
+    ) || [], 
+    certIndex, 
+    itemsPerView
+  );
 
   return (
     <div className="bg-white">
@@ -545,7 +730,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section - Netflix Style with Pyramidal Effect */}
+      {/* Projects Section - Carousel Style */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -553,18 +738,20 @@ const App1 = () => {
               <h2 className="text-3xl font-bold text-gray-900">Featured Projects</h2>
               <div className="flex gap-2">
                 <button 
-                  onClick={() => scrollSlider(projectSliderRef, 'left', setProjectScrollPos)}
+                  onClick={() => goToPrev('projects')}
+                  aria-label="Previous slide"
                   className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
                 >
-                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <button 
-                  onClick={() => scrollSlider(projectSliderRef, 'right', setProjectScrollPos)}
+                  onClick={() => goToNext('projects')}
+                  aria-label="Next slide"
                   className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
                 >
-                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -572,37 +759,46 @@ const App1 = () => {
             </div>
           </div>
           
-          {/* Netflix-style slider with pyramidal effect */}
-          <div className="relative w-full">
-            {/* Gradient fades on edges - Netflix style */}
-            <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-white/90 via-white/50 to-transparent z-10 pointer-events-none"></div>
-            <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/90 via-white/50 to-transparent z-10 pointer-events-none"></div>
-            
+          {/* Projects Carousel */}
+          <div className="relative w-full px-4">
             <div 
               ref={projectSliderRef}
-              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory px-8"
+              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
             >
-              {portfolio.projects.map((project, index) => (
+              {visibleProjects.map((project, idx) => (
                 <div 
-                  key={index} 
-                  className="min-w-[280px] md:min-w-[320px] lg:min-w-[360px] snap-start flex-shrink-0 transition-all duration-500 hover:scale-105 hover:z-20"
+                  key={idx} 
+                  className={`min-w-[280px] md:min-w-[320px] lg:min-w-[360px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
+                    project.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
+                  }`}
                   style={{
-                    transform: `scale(${1 - (index % 5) * 0.04})`,
-                    zIndex: 20 - (index % 5),
-                    opacity: 1 - (index % 5) * 0.05,
+                    transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
                   }}
                 >
-                  <ProjectCard 
-                    project={project} 
-                    getMediaUrl={getMediaUrl}
-                    onImageClick={openImageZoom}
-                    onVideoClick={openVideoFullscreen}
-                  />
+                  {renderProjectCard(project, project.isCenter)}
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Pagination Dots */}
+          {portfolio.projects.length > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
+              {portfolio.projects.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => goToSlide('projects', idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    idx === projectIndex ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -620,106 +816,75 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section - Netflix Style with Pyramidal Effect */}
-      {portfolio.certificates && portfolio.certificates.filter(cert => 
-        !cert.certificate_name?.toLowerCase().includes('resume') && 
-        !cert.certificate_name?.toLowerCase().includes('cv')
-      ).length > 0 && (
+      {/* Certificates Section - Carousel Style */}
+      {visibleCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900">Certificates</h2>
               <div className="flex gap-2">
                 <button 
-                  onClick={() => scrollSlider(certificateSliderRef, 'left', setCertScrollPos)}
+                  onClick={() => goToPrev('certificates')}
+                  aria-label="Previous slide"
                   className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
                 >
-                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <button 
-                  onClick={() => scrollSlider(certificateSliderRef, 'right', setCertScrollPos)}
+                  onClick={() => goToNext('certificates')}
+                  aria-label="Next slide"
                   className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
                 >
-                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
             </div>
           </div>
-          
-          {/* Netflix-style slider with pyramidal effect */}
-          <div className="relative w-full">
-            {/* Gradient fades on edges - Netflix style */}
-            <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-white/90 via-white/50 to-transparent z-10 pointer-events-none"></div>
-            <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/90 via-white/50 to-transparent z-10 pointer-events-none"></div>
-            
+
+          {/* Certificates Carousel */}
+          <div className="relative w-full px-4">
             <div 
               ref={certificateSliderRef}
-              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory px-8"
+              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
             >
-              {portfolio.certificates
-                .filter(cert => 
-                  !cert.certificate_name?.toLowerCase().includes('resume') && 
-                  !cert.certificate_name?.toLowerCase().includes('cv')
-                )
-                .map((cert, index) => (
-                  <div 
-                    key={index} 
-                    className="min-w-[240px] md:min-w-[280px] lg:min-w-[320px] snap-start flex-shrink-0 transition-all duration-500 hover:scale-105 hover:z-20"
-                    style={{
-                      transform: `scale(${1 - (index % 5) * 0.04})`,
-                      zIndex: 20 - (index % 5),
-                      opacity: 1 - (index % 5) * 0.05,
-                    }}
-                  >
-                    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 hover:shadow-2xl transition-all duration-500 h-full hover:border-blue-400">
-                      {cert.certificate_image && (
-                        <div 
-                          className="relative h-48 overflow-hidden rounded-lg mb-4 cursor-pointer group"
-                          onClick={() => openImageZoom(getMediaUrl(cert, 'certificate_image'), cert.certificate_name)}
-                        >
-                          <img
-                            src={getMediaUrl(cert, 'certificate_image')}
-                            alt={cert.certificate_name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            onError={(e) => {
-                              const fallback = cert.certificate_image;
-                              if (fallback) {
-                                e.target.src = getMediaUrl(cert, 'certificate_image');
-                              }
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30">
-                              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2 hover:line-clamp-none transition-all duration-300">
-                        {cert.certificate_name}
-                      </h3>
-                      {cert.certificate_link && (
-                        <a 
-                          href={cert.certificate_link} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="inline-block mt-3 text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
-                        >
-                          View Certificate →
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              {visibleCertificates.map((cert, idx) => (
+                <div 
+                  key={idx} 
+                  className={`min-w-[240px] md:min-w-[280px] lg:min-w-[320px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
+                    cert.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
+                  }`}
+                  style={{
+                    transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                  }}
+                >
+                  {renderCertificateCard(cert, cert.isCenter)}
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* Pagination Dots */}
+          {visibleCertificates.length > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
+              {visibleCertificates.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => goToSlide('certificates', idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    idx === certIndex ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -991,121 +1156,6 @@ const SkillCard = ({ title, skills, icon }) => {
             {skill}
           </span>
         ))}
-      </div>
-    </div>
-  );
-};
-
-// Project Card Component - Netflix Style with Pyramidal Effect
-const ProjectCard = ({ project, getMediaUrl, onImageClick, onVideoClick }) => {
-  const toolsList = project.tools_used ? project.tools_used.split(',').map(t => t.trim()) : [];
-  const [isExpanded, setIsExpanded] = useState(false);
-  const screenshotUrl = getMediaUrl(project, 'screenshots');
-  const videoUrl = getMediaUrl(project, 'video');
-
-  return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full hover:border-blue-400">
-      {screenshotUrl && (
-        <div 
-          className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer"
-          onClick={() => onImageClick(screenshotUrl, project.project_title)}
-        >
-          <img
-            src={screenshotUrl}
-            alt={project.project_title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            onError={(e) => {
-              const fallback = project.screenshots;
-              if (fallback) {
-                e.target.src = getMediaUrl(project, 'screenshots');
-              }
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30 transform scale-90 group-hover:scale-100 transition-transform duration-500">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-              </svg>
-            </div>
-          </div>
-          {videoUrl && (
-            <div className="absolute top-3 right-3 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-              Video
-            </div>
-          )}
-        </div>
-      )}
-      {!screenshotUrl && videoUrl && (
-        <div 
-          className="relative h-52 overflow-hidden bg-gray-900 cursor-pointer"
-          onClick={() => onVideoClick(videoUrl, project.project_title)}
-        >
-          <video className="w-full h-full object-cover" src={videoUrl} />
-          <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30 transform scale-90 group-hover:scale-100 transition-transform duration-500">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="absolute top-3 right-3 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-            Video
-          </div>
-        </div>
-      )}
-      <div className="p-6">
-        <h3 className="text-xl font-bold mb-2 text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">{project.project_title}</h3>
-        
-        <div 
-          className="relative"
-          onMouseEnter={() => setIsExpanded(true)}
-          onMouseLeave={() => setIsExpanded(false)}
-        >
-          <p className={`text-gray-600 mb-4 transition-all duration-300 ${
-            isExpanded ? 'line-clamp-none' : 'line-clamp-3'
-          }`}>
-            {project.description}
-          </p>
-          {project.description && project.description.length > 100 && (
-            <span className={`text-gray-400 text-sm cursor-help transition-opacity duration-300 ${
-              isExpanded ? 'opacity-0' : 'opacity-100'
-            }`}>
-              ... hover to expand
-            </span>
-          )}
-        </div>
-        
-        <div className="flex flex-wrap gap-2 mb-4">
-          {toolsList.slice(0, 4).map((tool, idx) => (
-            <span key={idx} className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50 hover:border-blue-400 transition-all duration-300">
-              {tool}
-            </span>
-          ))}
-          {toolsList.length > 4 && (
-            <span className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50">
-              +{toolsList.length - 4}
-            </span>
-          )}
-        </div>
-        <div className="flex space-x-4">
-          {project.github_link && (
-            <a href={project.github_link} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600 transition font-medium text-sm">
-              GitHub
-            </a>
-          )}
-          {project.url && (
-            <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600 transition font-medium text-sm">
-              Live Demo
-            </a>
-          )}
-        </div>
       </div>
     </div>
   );
