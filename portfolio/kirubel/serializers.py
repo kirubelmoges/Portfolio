@@ -62,3 +62,60 @@ class ResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resume
         fields = '__all__'
+
+
+class ProjectsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Projects
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Prioritize Cloudinary URLs over uploaded files
+        if instance.screenshots_url:
+            data['screenshots'] = instance.screenshots_url
+        if instance.video_url:
+            data['video'] = instance.video_url
+        return data
+
+
+class CertificateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Certificate
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.certificate_image_url:
+            data['certificate_image'] = instance.certificate_image_url
+        if instance.cv_url:
+            data['cv'] = instance.cv_url
+        return data
+
+
+class IntroductionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Introduction
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.image_url:
+            data['image'] = instance.image_url
+        if instance.imagebackground_url:
+            data['imagebackground'] = instance.imagebackground_url
+        return data
+
+
+class ResumeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resume
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.resume_file_url:
+            data['resume_file'] = instance.resume_file_url
+        if instance.cv_file_url:
+            data['cv_file'] = instance.cv_file_url
+        return data

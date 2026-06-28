@@ -301,7 +301,7 @@ const AdminDashboard = ({ onLogout }) => {
   );
 };
 
-// Data Card Component
+// Data Card Component - Updated for Cloudinary URLs
 const DataCard = ({ item, type, onEdit, onDelete, getFileIcon, getFileType }) => {
   const getFileUrl = (filePath) => {
     if (!filePath) return null;
@@ -309,23 +309,58 @@ const DataCard = ({ item, type, onEdit, onDelete, getFileIcon, getFileType }) =>
     return `${MEDIA_URL}${filePath}`;
   };
 
-  const renderFilePreview = (filePath, fieldName) => {
+  // Helper function to get media URL from item (checks Cloudinary URLs first)
+  const getMediaUrl = (item, fieldName) => {
+    // Check for Cloudinary URL fields first
+    const cloudinaryFields = {
+      'image': 'image_url',
+      'imagebackground': 'imagebackground_url',
+      'screenshots': 'screenshots_url',
+      'video': 'video_url',
+      'certificate_image': 'certificate_image_url',
+      'cv': 'cv_url',
+      'resume_file': 'resume_file_url',
+      'cv_file': 'cv_file_url'
+    };
+    
+    const cloudinaryField = cloudinaryFields[fieldName];
+    if (cloudinaryField && item[cloudinaryField]) {
+      return item[cloudinaryField];
+    }
+    
+    // Fallback to uploaded file
+    if (item[fieldName]) {
+      return getFileUrl(item[fieldName]);
+    }
+    
+    return null;
+  };
+
+  const renderFilePreview = (item, fieldName) => {
+    const filePath = getMediaUrl(item, fieldName);
     if (!filePath) return null;
+    
     const fileType = getFileType(filePath);
-    const fileUrl = getFileUrl(filePath);
     
     if (fileType === 'image') {
       return (
         <img 
-          src={fileUrl} 
+          src={filePath} 
           alt={fieldName}
           className="w-16 h-16 object-cover rounded-lg"
+          onError={(e) => {
+            // If image fails to load, try fallback
+            const fallback = item[fieldName];
+            if (fallback) {
+              e.target.src = getFileUrl(fallback);
+            }
+          }}
         />
       );
     } else if (fileType === 'pdf') {
       return (
         <a 
-          href={fileUrl} 
+          href={filePath} 
           target="_blank" 
           rel="noopener noreferrer"
           className="flex items-center space-x-2 text-sm text-red-400 hover:text-red-300"
@@ -335,10 +370,18 @@ const DataCard = ({ item, type, onEdit, onDelete, getFileIcon, getFileType }) =>
           <Download className="w-3 h-3" />
         </a>
       );
+    } else if (fileType === 'video') {
+      return (
+        <video 
+          controls 
+          className="w-32 h-32 object-cover rounded-lg"
+          src={filePath}
+        />
+      );
     } else {
       return (
         <a 
-          href={fileUrl} 
+          href={filePath} 
           target="_blank" 
           rel="noopener noreferrer"
           className="flex items-center space-x-2 text-sm text-blue-400 hover:text-blue-300"
@@ -357,16 +400,16 @@ const DataCard = ({ item, type, onEdit, onDelete, getFileIcon, getFileType }) =>
         return (
           <div className="space-y-3">
             <div className="flex items-center space-x-4">
-              {item.image && renderFilePreview(item.image, 'Profile')}
+              {renderFilePreview(item, 'image')}
               <div>
                 <h3 className="font-semibold text-white">{item.name}</h3>
                 <p className="text-sm text-gray-400">{item.career}</p>
               </div>
             </div>
-            {item.imagebackground && (
+            {renderFilePreview(item, 'imagebackground') && (
               <div className="mt-2">
                 <p className="text-xs text-gray-400 mb-1">Banner Image:</p>
-                {renderFilePreview(item.imagebackground, 'Banner')}
+                {renderFilePreview(item, 'imagebackground')}
               </div>
             )}
             {item.role && (
@@ -382,14 +425,15 @@ const DataCard = ({ item, type, onEdit, onDelete, getFileIcon, getFileType }) =>
           <div>
             <h3 className="font-semibold text-white">{item.project_title}</h3>
             <p className="text-sm text-gray-400 line-clamp-2">{item.description}</p>
-            {item.screenshots && (
+            {renderFilePreview(item, 'screenshots') && (
               <div className="mt-2">
-                {renderFilePreview(item.screenshots, 'Screenshot')}
+                {renderFilePreview(item, 'screenshots')}
               </div>
             )}
-            {item.video && (
+            {renderFilePreview(item, 'video') && (
               <div className="mt-2">
-                {renderFilePreview(item.video, 'Video')}
+                <p className="text-xs text-gray-400">Video:</p>
+                {renderFilePreview(item, 'video')}
               </div>
             )}
             <div className="flex gap-2 mt-2 flex-wrap">
@@ -417,9 +461,9 @@ const DataCard = ({ item, type, onEdit, onDelete, getFileIcon, getFileType }) =>
         return (
           <div>
             <h3 className="font-semibold text-white">{item.certificate_name}</h3>
-            {item.certificate_image && (
+            {renderFilePreview(item, 'certificate_image') && (
               <div className="mt-2">
-                {renderFilePreview(item.certificate_image, 'Certificate Image')}
+                {renderFilePreview(item, 'certificate_image')}
               </div>
             )}
             {item.certificate_link && (
@@ -440,14 +484,14 @@ const DataCard = ({ item, type, onEdit, onDelete, getFileIcon, getFileType }) =>
         return (
           <div>
             <h3 className="font-semibold text-white">{item.resume_name || 'Resume / CV'}</h3>
-            {item.resume_file && (
+            {renderFilePreview(item, 'resume_file') && (
               <div className="mt-2">
-                {renderFilePreview(item.resume_file, 'Resume')}
+                {renderFilePreview(item, 'resume_file')}
               </div>
             )}
-            {item.cv_file && (
+            {renderFilePreview(item, 'cv_file') && (
               <div className="mt-2">
-                {renderFilePreview(item.cv_file, 'CV')}
+                {renderFilePreview(item, 'cv_file')}
               </div>
             )}
           </div>
@@ -652,6 +696,16 @@ const Modal = ({ type, formData, setFormData, onSubmit, onClose, isEditing, hand
     const currentFields = fields[type] || [];
     const currentFileFields = fileFields[type] || [];
 
+    // Add Cloudinary URL fields to the form
+    const cloudinaryFields = {
+      introduction: ['image_url', 'imagebackground_url'],
+      projects: ['screenshots_url', 'video_url'],
+      certificates: ['certificate_image_url', 'cv_url'],
+      resume: ['resume_file_url', 'cv_file_url'],
+    };
+
+    const currentCloudinaryFields = cloudinaryFields[type] || [];
+
     return (
       <>
         {/* Text/Input Fields */}
@@ -681,6 +735,30 @@ const Modal = ({ type, formData, setFormData, onSubmit, onClose, isEditing, hand
             )}
           </div>
         ))}
+
+        {/* Cloudinary URL Fields */}
+        {currentCloudinaryFields.length > 0 && (
+          <div className="mb-4 border-t border-gray-600 pt-4">
+            <h4 className="text-sm font-medium text-gray-400 mb-3">Cloudinary URLs (Alternative to file upload)</h4>
+            {currentCloudinaryFields.map((fieldName) => {
+              const label = fieldName.replace('_url', '').replace('_', ' ').toUpperCase();
+              return (
+                <div key={fieldName} className="mb-3">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    {label} URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData[fieldName] || ''}
+                    onChange={(e) => setFormData({ ...formData, [fieldName]: e.target.value })}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-400"
+                    placeholder={`https://res.cloudinary.com/...`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* File Upload Fields */}
         {currentFileFields.includes('image') && renderFileInput('image', 'Profile Image', 'image/*', 'Upload your profile picture (JPG, PNG, GIF)')}

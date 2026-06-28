@@ -64,7 +64,7 @@ const App1 = () => {
       const interval = setInterval(() => {
         const slider = projectSliderRef.current;
         const maxScroll = slider.scrollWidth - slider.clientWidth;
-        let newPos = projectScrollPos + 400;
+        let newPos = projectScrollPos + 380;
         if (newPos >= maxScroll) {
           newPos = 0;
         }
@@ -81,7 +81,7 @@ const App1 = () => {
       const interval = setInterval(() => {
         const slider = certificateSliderRef.current;
         const maxScroll = slider.scrollWidth - slider.clientWidth;
-        let newPos = certScrollPos + 340;
+        let newPos = certScrollPos + 320;
         if (newPos >= maxScroll) {
           newPos = 0;
         }
@@ -155,6 +155,35 @@ const App1 = () => {
     }
   };
 
+  // Helper function to get media URL (checks Cloudinary URLs first)
+  const getMediaUrl = (item, fieldName) => {
+    if (!item) return null;
+    
+    // Map field names to Cloudinary URL fields
+    const cloudinaryFields = {
+      'image': 'image_url',
+      'imagebackground': 'imagebackground_url',
+      'screenshots': 'screenshots_url',
+      'video': 'video_url',
+      'certificate_image': 'certificate_image_url',
+      'cv': 'cv_url',
+      'resume_file': 'resume_file_url',
+      'cv_file': 'cv_file_url'
+    };
+    
+    const cloudinaryField = cloudinaryFields[fieldName];
+    if (cloudinaryField && item[cloudinaryField]) {
+      return item[cloudinaryField];
+    }
+    
+    // Fallback to uploaded file
+    if (item[fieldName]) {
+      return getFileUrl(item[fieldName]);
+    }
+    
+    return null;
+  };
+
   const getFileUrl = (filePath) => {
     if (!filePath) return null;
     if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
@@ -173,7 +202,7 @@ const App1 = () => {
     let resumeFiles = [];
     
     if (portfolio.resume && portfolio.resume.length > 0) {
-      resumeFiles = portfolio.resume.filter(item => item.resume_file);
+      resumeFiles = portfolio.resume.filter(item => item.resume_file || item.resume_file_url);
     }
     
     if (resumeFiles.length === 0) {
@@ -185,9 +214,9 @@ const App1 = () => {
     
     try {
       for (const item of resumeFiles) {
-        if (item.resume_file) {
-          const fileUrl = getFileUrl(item.resume_file);
-          const fileExt = item.resume_file.split('.').pop() || 'pdf';
+        const fileUrl = getMediaUrl(item, 'resume_file');
+        if (fileUrl) {
+          const fileExt = fileUrl.split('.').pop() || 'pdf';
           const link = document.createElement('a');
           link.href = fileUrl;
           link.download = `Resume_${item.resume_name || 'file'}.${fileExt}`;
@@ -210,7 +239,7 @@ const App1 = () => {
     let cvFiles = [];
     
     if (portfolio.resume && portfolio.resume.length > 0) {
-      cvFiles = portfolio.resume.filter(item => item.cv_file);
+      cvFiles = portfolio.resume.filter(item => item.cv_file || item.cv_file_url);
     }
     
     if (cvFiles.length === 0) {
@@ -222,9 +251,9 @@ const App1 = () => {
     
     try {
       for (const item of cvFiles) {
-        if (item.cv_file) {
-          const fileUrl = getFileUrl(item.cv_file);
-          const fileExt = item.cv_file.split('.').pop() || 'pdf';
+        const fileUrl = getMediaUrl(item, 'cv_file');
+        if (fileUrl) {
+          const fileExt = fileUrl.split('.').pop() || 'pdf';
           const link = document.createElement('a');
           link.href = fileUrl;
           link.download = `CV_${item.resume_name || 'file'}.${fileExt}`;
@@ -412,10 +441,10 @@ const App1 = () => {
         <div className="w-full h-[200px] md:h-[280px] lg:h-[320px] overflow-hidden bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 cursor-pointer">
           {portfolio.introduction?.imagebackground && (
             <img
-              src={getFileUrl(portfolio.introduction.imagebackground)}
+              src={getMediaUrl(portfolio.introduction, 'imagebackground')}
               alt="Banner"
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-              onClick={() => openImageZoom(getFileUrl(portfolio.introduction.imagebackground), 'Banner Image')}
+              onClick={() => openImageZoom(getMediaUrl(portfolio.introduction, 'imagebackground'), 'Banner Image')}
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
@@ -427,14 +456,15 @@ const App1 = () => {
           <div className="flex flex-col md:flex-row md:items-end -mt-16 md:-mt-20">
             <div className="flex justify-center md:justify-start">
               <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white bg-white/50 backdrop-blur-sm shadow-xl overflow-hidden cursor-pointer group">
-                {portfolio.introduction?.image ? (
+                {portfolio.introduction?.image && (
                   <img
-                    src={getFileUrl(portfolio.introduction.image)}
+                    src={getMediaUrl(portfolio.introduction, 'image')}
                     alt={portfolio.introduction.name}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    onClick={() => openImageZoom(getFileUrl(portfolio.introduction.image), portfolio.introduction.name)}
+                    onClick={() => openImageZoom(getMediaUrl(portfolio.introduction, 'image'), portfolio.introduction.name)}
                   />
-                ) : (
+                )}
+                {!portfolio.introduction?.image && (
                   <div className="w-full h-full bg-gradient-to-r from-gray-600 to-gray-900 flex items-center justify-center text-white text-4xl">
                     {portfolio.introduction?.name?.charAt(0) || 'K'}
                   </div>
@@ -515,7 +545,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section - Netflix Style Horizontal Scroll */}
+      {/* Projects Section - Netflix Style with Pyramidal Effect */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -540,28 +570,37 @@ const App1 = () => {
                 </button>
               </div>
             </div>
+          </div>
+          
+          {/* Netflix-style slider with pyramidal effect */}
+          <div className="relative w-full">
+            {/* Gradient fades on edges - Netflix style */}
+            <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-white/90 via-white/50 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/90 via-white/50 to-transparent z-10 pointer-events-none"></div>
             
-            <div className="relative">
-              {/* Gradient fade on edges */}
-              <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-white/80 to-transparent z-10 pointer-events-none"></div>
-              <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-white/80 to-transparent z-10 pointer-events-none"></div>
-              
-              <div 
-                ref={projectSliderRef}
-                className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {portfolio.projects.map((project, index) => (
-                  <div key={index} className="min-w-[320px] md:min-w-[380px] snap-start">
-                    <ProjectCard 
-                      project={project} 
-                      getFileUrl={getFileUrl}
-                      onImageClick={openImageZoom}
-                      onVideoClick={openVideoFullscreen}
-                    />
-                  </div>
-                ))}
-              </div>
+            <div 
+              ref={projectSliderRef}
+              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory px-8"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {portfolio.projects.map((project, index) => (
+                <div 
+                  key={index} 
+                  className="min-w-[280px] md:min-w-[320px] lg:min-w-[360px] snap-start flex-shrink-0 transition-all duration-500 hover:scale-105 hover:z-20"
+                  style={{
+                    transform: `scale(${1 - (index % 5) * 0.04})`,
+                    zIndex: 20 - (index % 5),
+                    opacity: 1 - (index % 5) * 0.05,
+                  }}
+                >
+                  <ProjectCard 
+                    project={project} 
+                    getMediaUrl={getMediaUrl}
+                    onImageClick={openImageZoom}
+                    onVideoClick={openVideoFullscreen}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -581,7 +620,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section - Netflix Style Horizontal Scroll */}
+      {/* Certificates Section - Netflix Style with Pyramidal Effect */}
       {portfolio.certificates && portfolio.certificates.filter(cert => 
         !cert.certificate_name?.toLowerCase().includes('resume') && 
         !cert.certificate_name?.toLowerCase().includes('cv')
@@ -609,59 +648,76 @@ const App1 = () => {
                 </button>
               </div>
             </div>
+          </div>
+          
+          {/* Netflix-style slider with pyramidal effect */}
+          <div className="relative w-full">
+            {/* Gradient fades on edges - Netflix style */}
+            <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-white/90 via-white/50 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/90 via-white/50 to-transparent z-10 pointer-events-none"></div>
             
-            <div className="relative">
-              {/* Gradient fade on edges */}
-              <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-white/80 to-transparent z-10 pointer-events-none"></div>
-              <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-white/80 to-transparent z-10 pointer-events-none"></div>
-              
-              <div 
-                ref={certificateSliderRef}
-                className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {portfolio.certificates
-                  .filter(cert => 
-                    !cert.certificate_name?.toLowerCase().includes('resume') && 
-                    !cert.certificate_name?.toLowerCase().includes('cv')
-                  )
-                  .map((cert, index) => (
-                    <div key={index} className="min-w-[280px] md:min-w-[320px] snap-start">
-                      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 h-full">
-                        {cert.certificate_image && (
-                          <div 
-                            className="relative h-40 overflow-hidden rounded-lg mb-4 cursor-pointer group"
-                            onClick={() => openImageZoom(getFileUrl(cert.certificate_image), cert.certificate_name)}
-                          >
-                            <img
-                              src={getFileUrl(cert.certificate_image)}
-                              alt={cert.certificate_name}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div 
+              ref={certificateSliderRef}
+              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory px-8"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {portfolio.certificates
+                .filter(cert => 
+                  !cert.certificate_name?.toLowerCase().includes('resume') && 
+                  !cert.certificate_name?.toLowerCase().includes('cv')
+                )
+                .map((cert, index) => (
+                  <div 
+                    key={index} 
+                    className="min-w-[240px] md:min-w-[280px] lg:min-w-[320px] snap-start flex-shrink-0 transition-all duration-500 hover:scale-105 hover:z-20"
+                    style={{
+                      transform: `scale(${1 - (index % 5) * 0.04})`,
+                      zIndex: 20 - (index % 5),
+                      opacity: 1 - (index % 5) * 0.05,
+                    }}
+                  >
+                    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 hover:shadow-2xl transition-all duration-500 h-full hover:border-blue-400">
+                      {cert.certificate_image && (
+                        <div 
+                          className="relative h-48 overflow-hidden rounded-lg mb-4 cursor-pointer group"
+                          onClick={() => openImageZoom(getMediaUrl(cert, 'certificate_image'), cert.certificate_name)}
+                        >
+                          <img
+                            src={getMediaUrl(cert, 'certificate_image')}
+                            alt={cert.certificate_name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            onError={(e) => {
+                              const fallback = cert.certificate_image;
+                              if (fallback) {
+                                e.target.src = getMediaUrl(cert, 'certificate_image');
+                              }
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30">
+                              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                               </svg>
                             </div>
                           </div>
-                        )}
-                        <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2 hover:line-clamp-none transition-all duration-300">
-                          {cert.certificate_name}
-                        </h3>
-                        {cert.certificate_link && (
-                          <a 
-                            href={cert.certificate_link} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="inline-block mt-3 text-gray-700 hover:text-black text-sm font-medium"
-                          >
-                            View Certificate →
-                          </a>
-                        )}
-                      </div>
+                        </div>
+                      )}
+                      <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2 hover:line-clamp-none transition-all duration-300">
+                        {cert.certificate_name}
+                      </h3>
+                      {cert.certificate_link && (
+                        <a 
+                          href={cert.certificate_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="inline-block mt-3 text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
+                        >
+                          View Certificate →
+                        </a>
+                      )}
                     </div>
-                  ))}
-              </div>
+                  </div>
+                ))}
             </div>
           </div>
         </section>
@@ -677,9 +733,9 @@ const App1 = () => {
                 <div key={index} className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-300">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{item.resume_name}</h3>
                   <div className="space-y-3">
-                    {item.resume_file && (
+                    {(item.resume_file || item.resume_file_url) && (
                       <a 
-                        href={getFileUrl(item.resume_file)}
+                        href={getMediaUrl(item, 'resume_file')}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition"
@@ -690,9 +746,9 @@ const App1 = () => {
                         <span>Download Resume</span>
                       </a>
                     )}
-                    {item.cv_file && (
+                    {(item.cv_file || item.cv_file_url) && (
                       <a 
-                        href={getFileUrl(item.cv_file)}
+                        href={getMediaUrl(item, 'cv_file')}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center space-x-2 text-green-600 hover:text-green-800 transition"
@@ -940,22 +996,30 @@ const SkillCard = ({ title, skills, icon }) => {
   );
 };
 
-// Project Card Component - Netflix Style
-const ProjectCard = ({ project, getFileUrl, onImageClick, onVideoClick }) => {
+// Project Card Component - Netflix Style with Pyramidal Effect
+const ProjectCard = ({ project, getMediaUrl, onImageClick, onVideoClick }) => {
   const toolsList = project.tools_used ? project.tools_used.split(',').map(t => t.trim()) : [];
   const [isExpanded, setIsExpanded] = useState(false);
+  const screenshotUrl = getMediaUrl(project, 'screenshots');
+  const videoUrl = getMediaUrl(project, 'video');
 
   return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full">
-      {project.screenshots && (
+    <div className="bg-white/50 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full hover:border-blue-400">
+      {screenshotUrl && (
         <div 
           className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer"
-          onClick={() => onImageClick(getFileUrl(project.screenshots), project.project_title)}
+          onClick={() => onImageClick(screenshotUrl, project.project_title)}
         >
           <img
-            src={getFileUrl(project.screenshots)}
+            src={screenshotUrl}
             alt={project.project_title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            onError={(e) => {
+              const fallback = project.screenshots;
+              if (fallback) {
+                e.target.src = getMediaUrl(project, 'screenshots');
+              }
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
             <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30 transform scale-90 group-hover:scale-100 transition-transform duration-500">
@@ -964,7 +1028,7 @@ const ProjectCard = ({ project, getFileUrl, onImageClick, onVideoClick }) => {
               </svg>
             </div>
           </div>
-          {project.video && (
+          {videoUrl && (
             <div className="absolute top-3 right-3 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z"/>
@@ -974,12 +1038,12 @@ const ProjectCard = ({ project, getFileUrl, onImageClick, onVideoClick }) => {
           )}
         </div>
       )}
-      {!project.screenshots && project.video && (
+      {!screenshotUrl && videoUrl && (
         <div 
           className="relative h-52 overflow-hidden bg-gray-900 cursor-pointer"
-          onClick={() => onVideoClick(getFileUrl(project.video), project.project_title)}
+          onClick={() => onVideoClick(videoUrl, project.project_title)}
         >
-          <video className="w-full h-full object-cover" src={getFileUrl(project.video)} />
+          <video className="w-full h-full object-cover" src={videoUrl} />
           <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
             <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30 transform scale-90 group-hover:scale-100 transition-transform duration-500">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1009,6 +1073,13 @@ const ProjectCard = ({ project, getFileUrl, onImageClick, onVideoClick }) => {
           }`}>
             {project.description}
           </p>
+          {project.description && project.description.length > 100 && (
+            <span className={`text-gray-400 text-sm cursor-help transition-opacity duration-300 ${
+              isExpanded ? 'opacity-0' : 'opacity-100'
+            }`}>
+              ... hover to expand
+            </span>
+          )}
         </div>
         
         <div className="flex flex-wrap gap-2 mb-4">
