@@ -84,7 +84,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'portfolio.wsgi.application'
 
-# Database - Aiven MySQL
+
+
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -102,6 +105,8 @@ DATABASES = {
         'CONN_MAX_AGE': 600,
     }
 }
+
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
