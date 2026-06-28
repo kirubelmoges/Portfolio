@@ -2,6 +2,9 @@
 
 echo "🚀 Starting Render build process..."
 
+# Navigate to portfolio folder (where manage.py is)
+cd portfolio
+
 echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
