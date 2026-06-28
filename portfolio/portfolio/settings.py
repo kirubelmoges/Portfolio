@@ -164,7 +164,9 @@ CORS_ALLOWED_ORIGINS = [
     "https://portfolio.vercel.app",
     "https://portfolio-9m8s.vercel.app",  # Your current Vercel URL
     "https://portfolio-aerdwk2w2-kirubelmoges-5648s-projects.vercel.app",
-    "https://portfolio-*.vercel.app",  # Allow all Vercel preview URLs
+    "https://portfolio-*.vercel.app",
+    "https://portfolio-frontend-83ng.onrender.com",  # ⭐ Add your Render frontend URL
+    "https://portfolio-frontend-*.onrender.com",   # Allow all Vercel preview URLs
 ]
 
 CORS_ALLOW_CREDENTIALS = True
