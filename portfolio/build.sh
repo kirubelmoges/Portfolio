@@ -2,9 +2,6 @@
 
 echo "🚀 Starting Render build process..."
 
-# This 'cd' command is the key. It moves into the directory with manage.py.
-cd portfolio
-
 echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
