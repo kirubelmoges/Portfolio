@@ -22,12 +22,6 @@ services:
         sync: false
       - key: MYSQL_PASSWORD
         sync: false
-      - key: EMAIL_HOST_USER
-        sync: false
-      - key: EMAIL_HOST_PASSWORD
-        sync: false
-      - key: CONTACT_EMAIL
-        sync: false
 
   # Frontend Static Site
   - type: static

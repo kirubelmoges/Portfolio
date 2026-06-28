@@ -2,7 +2,7 @@
 
 echo "🚀 Starting Render build process..."
 
-# Navigate to portfolio folder where manage.py is located
+# Navigate to the portfolio subfolder (where manage.py is)
 cd portfolio
 
 echo "📦 Installing dependencies..."
