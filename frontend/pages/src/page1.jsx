@@ -399,14 +399,14 @@ const App1 = () => {
     return visible;
   };
 
-  // Render project card
+  // Render project card - FIXED WIDTH
   const renderProjectCard = (item, isCenter) => {
     const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
     const screenshotUrl = getMediaUrl(item, 'screenshots');
     const videoUrl = getMediaUrl(item, 'video');
 
     return (
-      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}>
+      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}>
         {(screenshotUrl || videoUrl) && (
           <div 
             className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer"
@@ -459,7 +459,7 @@ const App1 = () => {
           </div>
         )}
         <div className="p-6">
-          <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2`}>
+          <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2 break-words`}>
             {item.project_title}
           </h3>
           <p className="text-gray-600 mb-4 line-clamp-3">{item.description}</p>
@@ -492,10 +492,10 @@ const App1 = () => {
     );
   };
 
-  // Render certificate card
+  // Render certificate card - FIXED WIDTH
   const renderCertificateCard = (cert, isCenter) => {
     return (
-      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}>
+      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}>
         {cert.certificate_image && (
           <div 
             className="relative h-48 overflow-hidden rounded-lg m-4 cursor-pointer group"
@@ -522,7 +522,7 @@ const App1 = () => {
           </div>
         )}
         <div className="p-6 pt-0">
-          <h3 className={`text-lg font-bold mb-1 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2`}>
+          <h3 className={`text-lg font-bold mb-1 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2 break-words`}>
             {cert.certificate_name}
           </h3>
           {cert.certificate_link && (
@@ -738,15 +738,15 @@ const App1 = () => {
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Technical Skills</h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <SkillCard title="Languages" skills={portfolio.skills[0].language} icon="💻" />
-              <SkillCard title="Frameworks" skills={portfolio.skills[0].framework} icon="🚀" />
-              <SkillCard title="Tools" skills={portfolio.skills[0].tools} icon="🛠️" />
+              <SkillCard title="Languages" skills={portfolio.skills[0].language} icon="" />
+              <SkillCard title="Frameworks" skills={portfolio.skills[0].framework} icon="" />
+              <SkillCard title="Tools" skills={portfolio.skills[0].tools} icon="" />
             </div>
           </div>
         </section>
       )}
 
-      {/* Projects Section - Carousel Style */}
+      {/* Projects Section - Carousel Style with Fixed Width */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -777,7 +777,7 @@ const App1 = () => {
             </div>
           </div>
           
-          {/* Projects Carousel */}
+          {/* Projects Carousel - Fixed Width */}
           <div className="relative w-full px-4">
             <div 
               ref={projectSliderRef}
@@ -789,18 +789,19 @@ const App1 = () => {
               onMouseLeave={() => setIsPaused(false)}
             >
               {portfolio.projects.length === 1 ? (
-                <div className="min-w-[280px] md:min-w-[340px] max-w-[340px] flex-shrink-0">
+                <div className="w-[280px] md:w-[320px] flex-shrink-0">
                   {renderProjectCard(portfolio.projects[0], true)}
                 </div>
               ) : (
                 visibleProjects.map((project, idx) => (
                   <div 
                     key={idx} 
-                    className={`min-w-[260px] md:min-w-[300px] lg:min-w-[340px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
-                      project.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
-                    }`}
+                    className="w-[260px] md:w-[300px] lg:w-[320px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out"
                     style={{
                       transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                      transform: project.isCenter ? 'scale(1.05)' : 'scale(0.95)',
+                      opacity: project.isCenter ? 1 : 0.8,
+                      zIndex: project.isCenter ? 20 : 10,
                     }}
                   >
                     {renderProjectCard(project, project.isCenter)}
@@ -842,7 +843,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section - Carousel Style */}
+      {/* Certificates Section - Carousel Style with Fixed Width */}
       {visibleCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -873,7 +874,7 @@ const App1 = () => {
             </div>
           </div>
 
-          {/* Certificates Carousel */}
+          {/* Certificates Carousel - Fixed Width */}
           <div className="relative w-full px-4">
             <div 
               ref={certificateSliderRef}
@@ -885,18 +886,19 @@ const App1 = () => {
               onMouseLeave={() => setIsPaused(false)}
             >
               {visibleCertificates.length === 1 ? (
-                <div className="min-w-[240px] md:min-w-[300px] max-w-[300px] flex-shrink-0">
+                <div className="w-[240px] md:w-[280px] flex-shrink-0">
                   {renderCertificateCard(visibleCertificates[0], true)}
                 </div>
               ) : (
                 visibleCertificates.map((cert, idx) => (
                   <div 
                     key={idx} 
-                    className={`min-w-[220px] md:min-w-[260px] lg:min-w-[300px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
-                      cert.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
-                    }`}
+                    className="w-[220px] md:w-[250px] lg:w-[280px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out"
                     style={{
                       transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                      transform: cert.isCenter ? 'scale(1.05)' : 'scale(0.95)',
+                      opacity: cert.isCenter ? 1 : 0.8,
+                      zIndex: cert.isCenter ? 20 : 10,
                     }}
                   >
                     {renderCertificateCard(cert, cert.isCenter)}
@@ -1004,10 +1006,10 @@ const App1 = () => {
             <div className="max-w-4xl mx-auto">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <ContactItem icon="📧" label="Email" value={portfolio.contact.email} link={`mailto:${portfolio.contact.email}`} />
-                  <ContactItem icon="🔗" label="LinkedIn" value={portfolio.contact.linkedin} link={portfolio.contact.linkedin} />
-                  <ContactItem icon="🐙" label="GitHub" value={portfolio.contact.github} link={portfolio.contact.github} />
-                  <ContactItem icon="📱" label="Phone" value={portfolio.contact.phone} link={`tel:${portfolio.contact.phone}`} />
+                  <ContactItem icon="✉" label="Email" value={portfolio.contact.email} link={`mailto:${portfolio.contact.email}`} />
+                  <ContactItem icon="🌐" label="LinkedIn" value={portfolio.contact.linkedin} link={portfolio.contact.linkedin} />
+                  <ContactItem icon="💻" label="GitHub" value={portfolio.contact.github} link={portfolio.contact.github} />
+                  <ContactItem icon="📞" label="Phone" value={portfolio.contact.phone} link={`tel:${portfolio.contact.phone}`} />
                 </div>
                 <ContactForm />
               </div>
