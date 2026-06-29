@@ -5,7 +5,7 @@ const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
 const MEDIA_URL = 'https://portfolio-backend-ee1z.onrender.com';
 
 // Project Card Component
-const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)', onImageClick, onVideoClick, getMediaUrl, openImageZoom, openVideoFullscreen }) => {
+const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoClick, getMediaUrl }) => {
   const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
   const screenshotUrl = getMediaUrl(item, 'screenshots');
   const videoUrl = getMediaUrl(item, 'video');
@@ -13,14 +13,7 @@ const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, z
 
   return (
     <div 
-      className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}
-      style={{
-        transform: `scale(${scale}) translateY(${translateY}px)`,
-        opacity: opacity,
-        zIndex: zIndex,
-        filter: blur,
-        transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
-      }}
+      className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'} ${isBlurred ? 'blur-sm opacity-40 scale-75' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -121,21 +114,10 @@ const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, z
 };
 
 // Certificate Card Component
-const CertificateCard = ({ cert, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)', onImageClick, getMediaUrl, openImageZoom }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
+const CertificateCard = ({ cert, isCenter, isBlurred = false, onImageClick, getMediaUrl }) => {
   return (
     <div 
-      className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}
-      style={{
-        transform: `scale(${scale}) translateY(${translateY}px)`,
-        opacity: opacity,
-        zIndex: zIndex,
-        filter: blur,
-        transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'} ${isBlurred ? 'blur-sm opacity-40 scale-75' : ''}`}
     >
       {cert.certificate_image && (
         <div 
@@ -282,7 +264,7 @@ const App1 = () => {
     return () => clearInterval(certAutoRef.current);
   }, [portfolio.certificates, isPaused, isDragging]);
 
-  // Pause on interaction, resume after 5 seconds
+  // Pause on interaction
   useEffect(() => {
     if (!isPaused) return;
     const timer = setTimeout(() => {
@@ -578,18 +560,29 @@ const App1 = () => {
     ) || [];
   };
 
-  // Get visible items with stacked pyramid effect
-  const getVisibleItems = (items, currentIndex, itemsPerView) => {
+  // Get the three cards for mobile view (left blur, center, right blur)
+  const getMobileCards = (items, currentIndex) => {
+    if (!items || items.length === 0) return { left: null, center: null, right: null };
+    
+    const total = items.length;
+    const leftIdx = (currentIndex - 1 + total) % total;
+    const rightIdx = (currentIndex + 1) % total;
+    
+    return {
+      left: items[leftIdx],
+      center: items[currentIndex],
+      right: items[rightIdx]
+    };
+  };
+
+  // Get visible items for desktop (pyramid effect)
+  const getDesktopItems = (items, currentIndex) => {
     if (!items || items.length === 0) return [];
     
     const total = items.length;
     const visible = [];
-    
-    const cardsPerSide = 3;
+    const cardsPerSide = 2;
     const totalCardsToShow = 1 + (cardsPerSide * 2);
-    
-    const isMobile = window.innerWidth < 640;
-    const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
     
     for (let i = 0; i < totalCardsToShow; i++) {
       const offset = i - cardsPerSide;
@@ -597,7 +590,7 @@ const App1 = () => {
       const isCenter = offset === 0;
       const distance = Math.abs(offset);
       
-      let scale, translateY, opacity, zIndex, blur, isVisible;
+      let scale, translateY, opacity, zIndex, blur;
       
       if (isCenter) {
         scale = 1;
@@ -605,92 +598,24 @@ const App1 = () => {
         opacity = 1;
         zIndex = 30;
         blur = 'blur(0px)';
-        isVisible = true;
       } else if (distance === 1) {
         scale = 0.85;
         translateY = 15;
         opacity = 0.6;
         zIndex = 20;
         blur = 'blur(1px)';
-        isVisible = true;
       } else if (distance === 2) {
         scale = 0.7;
         translateY = 30;
         opacity = 0.3;
         zIndex = 15;
         blur = 'blur(3px)';
-        isVisible = true;
-      } else if (distance === 3) {
+      } else {
         scale = 0.55;
         translateY = 45;
         opacity = 0.12;
         zIndex = 10;
         blur = 'blur(5px)';
-        isVisible = true;
-      } else {
-        scale = 0.4;
-        translateY = 60;
-        opacity = 0.05;
-        zIndex = 5;
-        blur = 'blur(7px)';
-        isVisible = false;
-      }
-      
-      // Mobile adjustments - keep cards visible without squishing
-      if (isMobile) {
-        if (isCenter) {
-          scale = 1;
-          translateY = 0;
-          opacity = 1;
-          zIndex = 30;
-          blur = 'blur(0px)';
-        } else if (distance === 1) {
-          scale = 0.55;
-          translateY = 10;
-          opacity = 0.3;
-          zIndex = 20;
-          blur = 'blur(3px)';
-        } else if (distance === 2) {
-          scale = 0.35;
-          translateY = 20;
-          opacity = 0.12;
-          zIndex = 15;
-          blur = 'blur(5px)';
-        } else {
-          scale = 0.2;
-          translateY = 30;
-          opacity = 0.05;
-          zIndex = 10;
-          blur = 'blur(7px)';
-          isVisible = true;
-        }
-      } else if (isTablet) {
-        if (isCenter) {
-          scale = 1;
-          translateY = 0;
-          opacity = 1;
-          zIndex = 30;
-          blur = 'blur(0px)';
-        } else if (distance === 1) {
-          scale = 0.8;
-          translateY = 20;
-          opacity = 0.5;
-          zIndex = 20;
-          blur = 'blur(1.5px)';
-        } else if (distance === 2) {
-          scale = 0.6;
-          translateY = 35;
-          opacity = 0.2;
-          zIndex = 15;
-          blur = 'blur(3.5px)';
-        } else {
-          scale = 0.4;
-          translateY = 50;
-          opacity = 0.08;
-          zIndex = 10;
-          blur = 'blur(5px)';
-          isVisible = true;
-        }
       }
       
       visible.push({
@@ -703,7 +628,7 @@ const App1 = () => {
         opacity: opacity,
         zIndex: zIndex,
         blur: blur,
-        isVisible: isVisible,
+        isVisible: true,
       });
     }
     
@@ -759,23 +684,27 @@ const App1 = () => {
   }
 
   const filteredCertificates = getFilteredCertificates();
-  const visibleProjects = getVisibleItems(portfolio.projects, projectIndex, itemsPerView);
-  const visibleCertificates = getVisibleItems(filteredCertificates, certIndex, itemsPerView);
-
-  // Card width based on screen size - mobile gets 90%
-  const getCardWidth = () => {
-    const isMobile = window.innerWidth < 640;
-    if (isMobile) return 'w-[85%] max-w-[380px] flex-shrink-0';
-    if (itemsPerView === 1) return 'w-[85%] max-w-[380px] flex-shrink-0';
-    if (itemsPerView === 2) return 'w-[280px] max-w-[45vw] flex-shrink-0';
-    return 'w-[300px] max-w-[320px] flex-shrink-0';
+  const isMobile = window.innerWidth < 640;
+  
+  // Get cards based on screen size
+  const getProjectCards = () => {
+    if (isMobile) {
+      return getMobileCards(portfolio.projects, projectIndex);
+    } else {
+      return getDesktopItems(portfolio.projects, projectIndex);
+    }
   };
 
-  // Get gap between cards
-  const getGap = () => {
-    const isMobile = window.innerWidth < 640;
-    return isMobile ? 'gap-0' : 'gap-4';
+  const getCertificateCards = () => {
+    if (isMobile) {
+      return getMobileCards(filteredCertificates, certIndex);
+    } else {
+      return getDesktopItems(filteredCertificates, certIndex);
+    }
   };
+
+  const projectCards = getProjectCards();
+  const certificateCards = getCertificateCards();
 
   return (
     <div className="bg-white">
@@ -958,16 +887,16 @@ const App1 = () => {
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-4">
-            <div className="flex flex-col items-center">
-              <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Featured Projects</h2>
+            {/* Title and Arrows */}
+            <div className="flex flex-col items-center mb-8">
+              <h2 className="text-3xl font-bold text-center text-gray-900">Featured Projects</h2>
               
-              {/* Navigation Arrows - Under the title */}
               {portfolio.projects.length > 1 && (
-                <div className="flex gap-2 mb-6">
+                <div className="flex gap-3 mt-4">
                   <button 
                     onClick={() => goToPrev('projects')}
                     aria-label="Previous slide"
-                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10"
+                    className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
                   >
                     <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -976,7 +905,7 @@ const App1 = () => {
                   <button 
                     onClick={() => goToNext('projects')}
                     aria-label="Next slide"
-                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10"
+                    className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
                   >
                     <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -985,84 +914,116 @@ const App1 = () => {
                 </div>
               )}
             </div>
-          </div>
-          
-          {/* Projects Carousel */}
-          <div className="relative w-full overflow-visible">
-            <div 
-              ref={projectSliderRef}
-              className={`flex ${getGap()} overflow-visible pb-6 snap-x snap-mandatory justify-center items-center px-4`}
-              style={{ 
-                scrollbarWidth: 'none', 
-                msOverflowStyle: 'none',
-                minHeight: '500px',
-              }}
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
-              onTouchStart={(e) => handleDragStart(e, 'projects')}
-              onTouchMove={(e) => handleDragMove(e, 'projects')}
-              onTouchEnd={handleDragEnd}
-              onMouseDown={(e) => handleDragStart(e, 'projects')}
-              onMouseMove={(e) => handleDragMove(e, 'projects')}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
-            >
-              {visibleProjects.map((project, idx) => {
-                const offset = project.position || 0;
-                const isVisible = project.isVisible !== false;
-                
-                return (
-                  <div 
-                    key={`${project.originalIndex}-${idx}`} 
-                    className={getCardWidth()}
-                    style={{
-                      transform: `scale(${project.scale}) translateY(${project.translateY}px)`,
-                      opacity: project.opacity,
-                      zIndex: project.zIndex,
-                      filter: project.blur,
-                      transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
-                      pointerEvents: project.isCenter ? 'auto' : 'none',
-                      marginLeft: offset < 0 ? `${Math.abs(offset) * 5}px` : '0',
-                      marginRight: offset > 0 ? `${offset * 5}px` : '0',
-                    }}
-                  >
-                    {isVisible && (
+
+            {/* Projects Carousel */}
+            <div className="relative w-full overflow-visible">
+              {isMobile ? (
+                // MOBILE VIEW: 3 cards (left blur, center main, right blur)
+                <div className="flex justify-center items-center relative" style={{ minHeight: '450px' }}>
+                  {/* Left Blur Card */}
+                  {projectCards.left && (
+                    <div className="absolute left-0 w-[10%] min-w-[60px] z-10 pointer-events-none">
+                      <div className="transform scale-75 opacity-40 blur-sm">
+                        <ProjectCard 
+                          item={projectCards.left}
+                          isCenter={false}
+                          isBlurred={true}
+                          onImageClick={openImageZoom}
+                          onVideoClick={openVideoFullscreen}
+                          getMediaUrl={getMediaUrl}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Center Main Card - 90% width */}
+                  {projectCards.center && (
+                    <div className="w-[90%] max-w-[400px] z-20 mx-auto">
                       <ProjectCard 
-                        item={project}
-                        isCenter={project.isCenter}
-                        scale={1}
-                        translateY={0}
-                        opacity={1}
-                        zIndex={project.zIndex}
-                        blur="blur(0px)"
+                        item={projectCards.center}
+                        isCenter={true}
+                        isBlurred={false}
                         onImageClick={openImageZoom}
                         onVideoClick={openVideoFullscreen}
                         getMediaUrl={getMediaUrl}
-                        openImageZoom={openImageZoom}
-                        openVideoFullscreen={openVideoFullscreen}
                       />
-                    )}
-                  </div>
-                );
-              })}
+                    </div>
+                  )}
+                  
+                  {/* Right Blur Card */}
+                  {projectCards.right && (
+                    <div className="absolute right-0 w-[10%] min-w-[60px] z-10 pointer-events-none">
+                      <div className="transform scale-75 opacity-40 blur-sm">
+                        <ProjectCard 
+                          item={projectCards.right}
+                          isCenter={false}
+                          isBlurred={true}
+                          onImageClick={openImageZoom}
+                          onVideoClick={openVideoFullscreen}
+                          getMediaUrl={getMediaUrl}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // DESKTOP VIEW: Pyramid effect with scrolling
+                <div 
+                  ref={projectSliderRef}
+                  className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory justify-center items-start"
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none',
+                    minHeight: '500px',
+                    padding: '0 20px'
+                  }}
+                  onMouseEnter={() => setIsPaused(true)}
+                  onMouseLeave={() => setIsPaused(false)}
+                >
+                  {Array.isArray(projectCards) && projectCards.map((project, idx) => (
+                    <div 
+                      key={`${project.originalIndex}-${idx}`} 
+                      className="flex-shrink-0 snap-center transition-all duration-500"
+                      style={{
+                        width: project.isCenter ? '320px' : '260px',
+                        transform: `scale(${project.scale}) translateY(${project.translateY}px)`,
+                        opacity: project.opacity,
+                        zIndex: project.zIndex,
+                        filter: project.blur,
+                        transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
+                        pointerEvents: project.isCenter ? 'auto' : 'none',
+                      }}
+                    >
+                      <ProjectCard 
+                        item={project}
+                        isCenter={project.isCenter}
+                        isBlurred={false}
+                        onImageClick={openImageZoom}
+                        onVideoClick={openVideoFullscreen}
+                        getMediaUrl={getMediaUrl}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Pagination Dots */}
-          {portfolio.projects.length > 1 && (
-            <div className="flex justify-center gap-2 mt-6">
-              {portfolio.projects.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => goToSlide('projects', idx)}
-                  aria-label={`Go to slide ${idx + 1}`}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    idx === projectIndex ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+            {/* Pagination Dots */}
+            {portfolio.projects.length > 1 && (
+              <div className="flex justify-center gap-2 mt-6">
+                {portfolio.projects.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goToSlide('projects', idx)}
+                    aria-label={`Go to slide ${idx + 1}`}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      idx === projectIndex ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       )}
 
@@ -1081,19 +1042,19 @@ const App1 = () => {
       )}
 
       {/* Certificates Section */}
-      {visibleCertificates.length > 0 && (
+      {filteredCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-4">
-            <div className="flex flex-col items-center">
-              <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Certificates</h2>
+            {/* Title and Arrows */}
+            <div className="flex flex-col items-center mb-8">
+              <h2 className="text-3xl font-bold text-center text-gray-900">Certificates</h2>
               
-              {/* Navigation Arrows - Under the title */}
-              {visibleCertificates.length > 1 && (
-                <div className="flex gap-2 mb-6">
+              {filteredCertificates.length > 1 && (
+                <div className="flex gap-3 mt-4">
                   <button 
                     onClick={() => goToPrev('certificates')}
                     aria-label="Previous slide"
-                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10"
+                    className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
                   >
                     <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1102,7 +1063,7 @@ const App1 = () => {
                   <button 
                     onClick={() => goToNext('certificates')}
                     aria-label="Next slide"
-                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10"
+                    className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
                   >
                     <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1111,82 +1072,112 @@ const App1 = () => {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Certificates Carousel */}
-          <div className="relative w-full overflow-visible">
-            <div 
-              ref={certificateSliderRef}
-              className={`flex ${getGap()} overflow-visible pb-6 snap-x snap-mandatory justify-center items-center px-4`}
-              style={{ 
-                scrollbarWidth: 'none', 
-                msOverflowStyle: 'none',
-                minHeight: '480px',
-              }}
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
-              onTouchStart={(e) => handleDragStart(e, 'certificates')}
-              onTouchMove={(e) => handleDragMove(e, 'certificates')}
-              onTouchEnd={handleDragEnd}
-              onMouseDown={(e) => handleDragStart(e, 'certificates')}
-              onMouseMove={(e) => handleDragMove(e, 'certificates')}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
-            >
-              {visibleCertificates.map((cert, idx) => {
-                const offset = cert.position || 0;
-                const isVisible = cert.isVisible !== false;
-                
-                return (
-                  <div 
-                    key={`${cert.originalIndex}-${idx}`} 
-                    className={getCardWidth()}
-                    style={{
-                      transform: `scale(${cert.scale}) translateY(${cert.translateY}px)`,
-                      opacity: cert.opacity,
-                      zIndex: cert.zIndex,
-                      filter: cert.blur,
-                      transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
-                      pointerEvents: cert.isCenter ? 'auto' : 'none',
-                      marginLeft: offset < 0 ? `${Math.abs(offset) * 5}px` : '0',
-                      marginRight: offset > 0 ? `${offset * 5}px` : '0',
-                    }}
-                  >
-                    {isVisible && (
+            {/* Certificates Carousel */}
+            <div className="relative w-full overflow-visible">
+              {isMobile ? (
+                // MOBILE VIEW: 3 cards (left blur, center main, right blur)
+                <div className="flex justify-center items-center relative" style={{ minHeight: '450px' }}>
+                  {/* Left Blur Card */}
+                  {certificateCards.left && (
+                    <div className="absolute left-0 w-[10%] min-w-[60px] z-10 pointer-events-none">
+                      <div className="transform scale-75 opacity-40 blur-sm">
+                        <CertificateCard 
+                          cert={certificateCards.left}
+                          isCenter={false}
+                          isBlurred={true}
+                          onImageClick={openImageZoom}
+                          getMediaUrl={getMediaUrl}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Center Main Card - 90% width */}
+                  {certificateCards.center && (
+                    <div className="w-[90%] max-w-[400px] z-20 mx-auto">
+                      <CertificateCard 
+                        cert={certificateCards.center}
+                        isCenter={true}
+                        isBlurred={false}
+                        onImageClick={openImageZoom}
+                        getMediaUrl={getMediaUrl}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Right Blur Card */}
+                  {certificateCards.right && (
+                    <div className="absolute right-0 w-[10%] min-w-[60px] z-10 pointer-events-none">
+                      <div className="transform scale-75 opacity-40 blur-sm">
+                        <CertificateCard 
+                          cert={certificateCards.right}
+                          isCenter={false}
+                          isBlurred={true}
+                          onImageClick={openImageZoom}
+                          getMediaUrl={getMediaUrl}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // DESKTOP VIEW: Pyramid effect with scrolling
+                <div 
+                  ref={certificateSliderRef}
+                  className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory justify-center items-start"
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none',
+                    minHeight: '480px',
+                    padding: '0 20px'
+                  }}
+                  onMouseEnter={() => setIsPaused(true)}
+                  onMouseLeave={() => setIsPaused(false)}
+                >
+                  {Array.isArray(certificateCards) && certificateCards.map((cert, idx) => (
+                    <div 
+                      key={`${cert.originalIndex}-${idx}`} 
+                      className="flex-shrink-0 snap-center transition-all duration-500"
+                      style={{
+                        width: cert.isCenter ? '320px' : '260px',
+                        transform: `scale(${cert.scale}) translateY(${cert.translateY}px)`,
+                        opacity: cert.opacity,
+                        zIndex: cert.zIndex,
+                        filter: cert.blur,
+                        transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
+                        pointerEvents: cert.isCenter ? 'auto' : 'none',
+                      }}
+                    >
                       <CertificateCard 
                         cert={cert}
                         isCenter={cert.isCenter}
-                        scale={1}
-                        translateY={0}
-                        opacity={1}
-                        zIndex={cert.zIndex}
-                        blur="blur(0px)"
+                        isBlurred={false}
                         onImageClick={openImageZoom}
                         getMediaUrl={getMediaUrl}
-                        openImageZoom={openImageZoom}
                       />
-                    )}
-                  </div>
-                );
-              })}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Pagination Dots */}
-          {visibleCertificates.length > 1 && (
-            <div className="flex justify-center gap-2 mt-6">
-              {visibleCertificates.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => goToSlide('certificates', idx)}
-                  aria-label={`Go to slide ${idx + 1}`}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    idx === certIndex ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+            {/* Pagination Dots */}
+            {filteredCertificates.length > 1 && (
+              <div className="flex justify-center gap-2 mt-6">
+                {filteredCertificates.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goToSlide('certificates', idx)}
+                    aria-label={`Go to slide ${idx + 1}`}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      idx === certIndex ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       )}
 
