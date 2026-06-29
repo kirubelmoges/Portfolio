@@ -4,7 +4,7 @@ import './App.css';
 const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
 const MEDIA_URL = 'https://portfolio-backend-ee1z.onrender.com';
 
-// Project Card Component - Updated with better mobile sizing and hover behavior
+// Project Card Component
 const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)', onImageClick, onVideoClick, getMediaUrl, openImageZoom, openVideoFullscreen }) => {
   const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
   const screenshotUrl = getMediaUrl(item, 'screenshots');
@@ -80,7 +80,6 @@ const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, z
           {item.project_title}
         </h3>
         
-        {/* Description - Always show 2 lines, expands on hover */}
         <div className="overflow-hidden">
           <p className={`text-gray-600 mb-3 transition-all duration-300 ${
             isHovered ? 'line-clamp-none' : 'line-clamp-2'
@@ -89,7 +88,6 @@ const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, z
           </p>
         </div>
         
-        {/* Tools - Always show 1 line, expands on hover */}
         <div className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${
           isHovered ? 'max-h-40 opacity-100' : 'max-h-8 opacity-100'
         }`}>
@@ -263,7 +261,7 @@ const App1 = () => {
     return () => window.removeEventListener('resize', updateItemsPerView);
   }, []);
 
-  // Auto-slide for projects - decreased from 3000ms to 2500ms
+  // Auto-slide for projects
   useEffect(() => {
     if (portfolio.projects?.length > 1 && !isPaused && !isDragging && isMounted.current) {
       projectAutoRef.current = setInterval(() => {
@@ -273,7 +271,7 @@ const App1 = () => {
     return () => clearInterval(projectAutoRef.current);
   }, [portfolio.projects, isPaused, isDragging]);
 
-  // Auto-slide for certificates - decreased from 3000ms to 2500ms
+  // Auto-slide for certificates
   useEffect(() => {
     const filteredCerts = getFilteredCertificates();
     if (filteredCerts.length > 1 && !isPaused && !isDragging && isMounted.current) {
@@ -580,16 +578,15 @@ const App1 = () => {
     ) || [];
   };
 
-  // Get visible items with stacked pyramid effect - showing cards behind on both sides
+  // Get visible items with stacked pyramid effect
   const getVisibleItems = (items, currentIndex, itemsPerView) => {
     if (!items || items.length === 0) return [];
     
     const total = items.length;
     const visible = [];
     
-    // Number of cards to show on each side (stacked behind)
-    const cardsPerSide = 3; // Show 3 cards behind on each side
-    const totalCardsToShow = 1 + (cardsPerSide * 2); // Center + left + right
+    const cardsPerSide = 3;
+    const totalCardsToShow = 1 + (cardsPerSide * 2);
     
     const isMobile = window.innerWidth < 640;
     const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
@@ -602,7 +599,6 @@ const App1 = () => {
       
       let scale, translateY, opacity, zIndex, blur, isVisible;
       
-      // Calculate progressive scaling based on distance from center
       if (isCenter) {
         scale = 1;
         translateY = 0;
@@ -611,7 +607,6 @@ const App1 = () => {
         blur = 'blur(0px)';
         isVisible = true;
       } else if (distance === 1) {
-        // First layer behind - slightly smaller, visible
         scale = 0.85;
         translateY = 15;
         opacity = 0.6;
@@ -619,7 +614,6 @@ const App1 = () => {
         blur = 'blur(1px)';
         isVisible = true;
       } else if (distance === 2) {
-        // Second layer behind - smaller, more blurry
         scale = 0.7;
         translateY = 30;
         opacity = 0.3;
@@ -627,7 +621,6 @@ const App1 = () => {
         blur = 'blur(3px)';
         isVisible = true;
       } else if (distance === 3) {
-        // Third layer behind - very small, very blurry
         scale = 0.55;
         translateY = 45;
         opacity = 0.12;
@@ -635,7 +628,6 @@ const App1 = () => {
         blur = 'blur(5px)';
         isVisible = true;
       } else {
-        // Beyond 3 layers - hidden
         scale = 0.4;
         translateY = 60;
         opacity = 0.05;
@@ -644,7 +636,7 @@ const App1 = () => {
         isVisible = false;
       }
       
-      // Adjust for mobile/tablet
+      // Mobile adjustments - keep cards visible without squishing
       if (isMobile) {
         if (isCenter) {
           scale = 1;
@@ -653,24 +645,24 @@ const App1 = () => {
           zIndex = 30;
           blur = 'blur(0px)';
         } else if (distance === 1) {
-          scale = 0.6;
-          translateY = 20;
-          opacity = 0.2;
+          scale = 0.55;
+          translateY = 10;
+          opacity = 0.3;
           zIndex = 20;
-          blur = 'blur(4px)';
+          blur = 'blur(3px)';
         } else if (distance === 2) {
           scale = 0.35;
-          translateY = 35;
-          opacity = 0.06;
+          translateY = 20;
+          opacity = 0.12;
           zIndex = 15;
-          blur = 'blur(6px)';
+          blur = 'blur(5px)';
         } else {
           scale = 0.2;
-          translateY = 50;
-          opacity = 0.02;
+          translateY = 30;
+          opacity = 0.05;
           zIndex = 10;
-          blur = 'blur(8px)';
-          isVisible = false;
+          blur = 'blur(7px)';
+          isVisible = true;
         }
       } else if (isTablet) {
         if (isCenter) {
@@ -697,7 +689,7 @@ const App1 = () => {
           opacity = 0.08;
           zIndex = 10;
           blur = 'blur(5px)';
-          isVisible = false;
+          isVisible = true;
         }
       }
       
@@ -770,34 +762,19 @@ const App1 = () => {
   const visibleProjects = getVisibleItems(portfolio.projects, projectIndex, itemsPerView);
   const visibleCertificates = getVisibleItems(filteredCertificates, certIndex, itemsPerView);
 
+  // Card width based on screen size - mobile gets 90%
   const getCardWidth = () => {
-    if (itemsPerView === 1) return 'w-[90%] max-w-[380px]';
-    if (itemsPerView === 2) return 'w-[280px] max-w-[45vw]';
-    return 'w-[300px] max-w-[320px]';
+    const isMobile = window.innerWidth < 640;
+    if (isMobile) return 'w-[85%] max-w-[380px] flex-shrink-0';
+    if (itemsPerView === 1) return 'w-[85%] max-w-[380px] flex-shrink-0';
+    if (itemsPerView === 2) return 'w-[280px] max-w-[45vw] flex-shrink-0';
+    return 'w-[300px] max-w-[320px] flex-shrink-0';
   };
 
-  // Get gap between cards based on screen size
+  // Get gap between cards
   const getGap = () => {
     const isMobile = window.innerWidth < 640;
-    return isMobile ? 'gap-1' : 'gap-4';
-  };
-
-  // Get margin offset for mobile to bring blurred cards closer
-  const getMarginOffset = (offset) => {
-    const isMobile = window.innerWidth < 640;
-    if (isMobile) {
-      // On mobile, reduce the margin to bring cards closer together
-      return offset < 0 ? `${Math.abs(offset) * 5}px` : '0';
-    }
-    return offset < 0 ? `${Math.abs(offset) * 15}px` : '0';
-  };
-
-  const getMarginRightOffset = (offset) => {
-    const isMobile = window.innerWidth < 640;
-    if (isMobile) {
-      return offset > 0 ? `${offset * 5}px` : '0';
-    }
-    return offset > 0 ? `${offset * 15}px` : '0';
+    return isMobile ? 'gap-0' : 'gap-4';
   };
 
   return (
@@ -977,14 +954,16 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section - Stacked Pyramid Carousel */}
+      {/* Projects Section */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
-          <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Featured Projects</h2>
-            <div className="flex justify-center items-center mb-6">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col items-center">
+              <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Featured Projects</h2>
+              
+              {/* Navigation Arrows - Under the title */}
               {portfolio.projects.length > 1 && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-6">
                   <button 
                     onClick={() => goToPrev('projects')}
                     aria-label="Previous slide"
@@ -1008,16 +987,14 @@ const App1 = () => {
             </div>
           </div>
           
-          {/* Projects Carousel - Stacked Pyramid Effect */}
-          <div className="relative w-full px-4 overflow-visible">
+          {/* Projects Carousel */}
+          <div className="relative w-full overflow-visible">
             <div 
               ref={projectSliderRef}
-              className={`flex ${getGap()} overflow-x-visible pb-6 snap-x snap-mandatory justify-center items-center`}
+              className={`flex ${getGap()} overflow-visible pb-6 snap-x snap-mandatory justify-center items-center px-4`}
               style={{ 
                 scrollbarWidth: 'none', 
                 msOverflowStyle: 'none',
-                paddingLeft: '0',
-                paddingRight: '0',
                 minHeight: '500px',
               }}
               onMouseEnter={() => setIsPaused(true)}
@@ -1033,12 +1010,11 @@ const App1 = () => {
               {visibleProjects.map((project, idx) => {
                 const offset = project.position || 0;
                 const isVisible = project.isVisible !== false;
-                const isMobile = window.innerWidth < 640;
                 
                 return (
                   <div 
                     key={`${project.originalIndex}-${idx}`} 
-                    className={`flex-shrink-0 snap-center transition-all duration-500 ease-in-out ${getCardWidth()}`}
+                    className={getCardWidth()}
                     style={{
                       transform: `scale(${project.scale}) translateY(${project.translateY}px)`,
                       opacity: project.opacity,
@@ -1046,8 +1022,8 @@ const App1 = () => {
                       filter: project.blur,
                       transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
                       pointerEvents: project.isCenter ? 'auto' : 'none',
-                      marginLeft: isMobile ? (offset < 0 ? `${Math.abs(offset) * 5}px` : '0') : (offset < 0 ? `${Math.abs(offset) * 15}px` : '0'),
-                      marginRight: isMobile ? (offset > 0 ? `${offset * 5}px` : '0') : (offset > 0 ? `${offset * 15}px` : '0'),
+                      marginLeft: offset < 0 ? `${Math.abs(offset) * 5}px` : '0',
+                      marginRight: offset > 0 ? `${offset * 5}px` : '0',
                     }}
                   >
                     {isVisible && (
@@ -1104,14 +1080,16 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section - Stacked Pyramid Carousel */}
+      {/* Certificates Section */}
       {visibleCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm">
-          <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Certificates</h2>
-            <div className="flex justify-center items-center mb-6">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col items-center">
+              <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Certificates</h2>
+              
+              {/* Navigation Arrows - Under the title */}
               {visibleCertificates.length > 1 && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-6">
                   <button 
                     onClick={() => goToPrev('certificates')}
                     aria-label="Previous slide"
@@ -1135,16 +1113,14 @@ const App1 = () => {
             </div>
           </div>
 
-          {/* Certificates Carousel - Stacked Pyramid Effect */}
-          <div className="relative w-full px-4 overflow-visible">
+          {/* Certificates Carousel */}
+          <div className="relative w-full overflow-visible">
             <div 
               ref={certificateSliderRef}
-              className={`flex ${getGap()} overflow-x-visible pb-6 snap-x snap-mandatory justify-center items-center`}
+              className={`flex ${getGap()} overflow-visible pb-6 snap-x snap-mandatory justify-center items-center px-4`}
               style={{ 
                 scrollbarWidth: 'none', 
                 msOverflowStyle: 'none',
-                paddingLeft: '0',
-                paddingRight: '0',
                 minHeight: '480px',
               }}
               onMouseEnter={() => setIsPaused(true)}
@@ -1160,12 +1136,11 @@ const App1 = () => {
               {visibleCertificates.map((cert, idx) => {
                 const offset = cert.position || 0;
                 const isVisible = cert.isVisible !== false;
-                const isMobile = window.innerWidth < 640;
                 
                 return (
                   <div 
                     key={`${cert.originalIndex}-${idx}`} 
-                    className={`flex-shrink-0 snap-center transition-all duration-500 ease-in-out ${getCardWidth()}`}
+                    className={getCardWidth()}
                     style={{
                       transform: `scale(${cert.scale}) translateY(${cert.translateY}px)`,
                       opacity: cert.opacity,
@@ -1173,8 +1148,8 @@ const App1 = () => {
                       filter: cert.blur,
                       transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
                       pointerEvents: cert.isCenter ? 'auto' : 'none',
-                      marginLeft: isMobile ? (offset < 0 ? `${Math.abs(offset) * 5}px` : '0') : (offset < 0 ? `${Math.abs(offset) * 15}px` : '0'),
-                      marginRight: isMobile ? (offset > 0 ? `${offset * 5}px` : '0') : (offset > 0 ? `${offset * 15}px` : '0'),
+                      marginLeft: offset < 0 ? `${Math.abs(offset) * 5}px` : '0',
+                      marginRight: offset > 0 ? `${offset * 5}px` : '0',
                     }}
                   >
                     {isVisible && (
