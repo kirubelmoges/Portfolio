@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
 const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
@@ -35,10 +35,13 @@ const App1 = () => {
   const [downloadingResume, setDownloadingResume] = useState(false);
   const [downloadingCV, setDownloadingCV] = useState(false);
   
-  // Carousel states - Projects
+  // Carousel states
   const [projectIndex, setProjectIndex] = useState(0);
   const [certIndex, setCertIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(3);
   
   // Refs
@@ -46,8 +49,6 @@ const App1 = () => {
   const certAutoRef = useRef(null);
   const projectSliderRef = useRef(null);
   const certificateSliderRef = useRef(null);
-  
-  // Track if component is mounted
   const isMounted = useRef(true);
 
   const sectionRefs = {
@@ -83,29 +84,26 @@ const App1 = () => {
     return () => window.removeEventListener('resize', updateItemsPerView);
   }, []);
 
-  // Auto-slide for projects carousel
+  // Auto-slide for projects
   useEffect(() => {
-    if (portfolio.projects?.length > 1 && !isPaused && isMounted.current) {
+    if (portfolio.projects?.length > 1 && !isPaused && !isDragging && isMounted.current) {
       projectAutoRef.current = setInterval(() => {
         setProjectIndex((prev) => (prev + 1) % portfolio.projects.length);
       }, 3000);
     }
     return () => clearInterval(projectAutoRef.current);
-  }, [portfolio.projects, isPaused]);
+  }, [portfolio.projects, isPaused, isDragging]);
 
-  // Auto-slide for certificates carousel
+  // Auto-slide for certificates
   useEffect(() => {
-    const filteredCerts = portfolio.certificates?.filter(cert => 
-      !cert.certificate_name?.toLowerCase().includes('resume') && 
-      !cert.certificate_name?.toLowerCase().includes('cv')
-    ) || [];
-    if (filteredCerts.length > 1 && !isPaused && isMounted.current) {
+    const filteredCerts = getFilteredCertificates();
+    if (filteredCerts.length > 1 && !isPaused && !isDragging && isMounted.current) {
       certAutoRef.current = setInterval(() => {
         setCertIndex((prev) => (prev + 1) % filteredCerts.length);
       }, 3000);
     }
     return () => clearInterval(certAutoRef.current);
-  }, [portfolio.certificates, isPaused]);
+  }, [portfolio.certificates, isPaused, isDragging]);
 
   // Pause on interaction, resume after 5 seconds
   useEffect(() => {
@@ -403,30 +401,140 @@ const App1 = () => {
     ) || [];
   };
 
-  // Get visible items for carousel - properly centered
-  const getVisibleItems = (items, currentIndex) => {
+  // Get visible items with pyramidal depth effect - showing adjacent cards as hints
+  const getVisibleItems = (items, currentIndex, itemsPerView) => {
     if (!items || items.length === 0) return [];
-    const count = Math.min(itemsPerView, items.length);
-    const visible = [];
-    const startOffset = Math.floor((count - 1) / 2);
     
-    for (let i = 0; i < count; i++) {
-      const offset = i - startOffset;
-      const idx = (currentIndex + offset + items.length) % items.length;
-      const isCenter = i === startOffset;
-      visible.push({ ...items[idx], originalIndex: idx, isCenter });
+    const total = items.length;
+    const visible = [];
+    
+    // For mobile (1 card), we want to show 3 items with the center one active
+    const effectiveItemsPerView = itemsPerView === 1 ? 3 : itemsPerView;
+    const effectiveHalfView = Math.floor(effectiveItemsPerView / 2);
+    
+    // Calculate if we're on mobile
+    const isMobile = window.innerWidth < 640;
+    const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
+    
+    for (let i = 0; i < effectiveItemsPerView; i++) {
+      const offset = i - effectiveHalfView;
+      const idx = (currentIndex + offset + total) % total;
+      const isCenter = offset === 0;
+      const distance = Math.abs(offset);
+      
+      let scale, translateY, opacity, zIndex, blur, isVisible;
+      
+      if (isMobile && itemsPerView === 1) {
+        // Mobile: Show center card full, adjacent cards as hints
+        if (isCenter) {
+          scale = 1;
+          translateY = 0;
+          opacity = 1;
+          zIndex = 30;
+          blur = 'blur(0px)';
+          isVisible = true;
+        } else if (distance === 1) {
+          scale = 0.7;
+          translateY = 30;
+          opacity = 0.25;
+          zIndex = 10;
+          blur = 'blur(2px)';
+          isVisible = true;
+        } else {
+          scale = 0.5;
+          translateY = 50;
+          opacity = 0.08;
+          zIndex = 5;
+          blur = 'blur(4px)';
+          isVisible = true;
+        }
+      } else if (isTablet && itemsPerView === 2) {
+        // Tablet: Show center card and one adjacent, with hint of the other
+        if (isCenter) {
+          scale = 1;
+          translateY = 0;
+          opacity = 1;
+          zIndex = 30;
+          blur = 'blur(0px)';
+          isVisible = true;
+        } else if (distance === 1) {
+          scale = 0.85;
+          translateY = 20;
+          opacity = 0.7;
+          zIndex = 20;
+          blur = 'blur(0.5px)';
+          isVisible = true;
+        } else {
+          scale = 0.6;
+          translateY = 40;
+          opacity = 0.15;
+          zIndex = 10;
+          blur = 'blur(3px)';
+          isVisible = true;
+        }
+      } else {
+        // Desktop: Normal pyramidal effect with 3 cards
+        if (isCenter) {
+          scale = 1;
+          translateY = 0;
+          opacity = 1;
+          zIndex = 30;
+          blur = 'blur(0px)';
+          isVisible = true;
+        } else if (distance === 1) {
+          scale = 0.9;
+          translateY = 20;
+          opacity = 0.7;
+          zIndex = 20;
+          blur = 'blur(0.5px)';
+          isVisible = true;
+        } else {
+          scale = 0.7;
+          translateY = 40;
+          opacity = 0.2;
+          zIndex = 10;
+          blur = 'blur(3px)';
+          isVisible = true;
+        }
+      }
+      
+      visible.push({
+        ...items[idx],
+        originalIndex: idx,
+        position: offset,
+        isCenter: isCenter,
+        scale: scale,
+        translateY: translateY,
+        opacity: opacity,
+        zIndex: zIndex,
+        blur: blur,
+        isVisible: isVisible,
+      });
     }
+    
     return visible;
   };
 
-  // Render project card
-  const renderProjectCard = (item, isCenter) => {
+  // Render project card with hover expand
+  const renderProjectCard = (item, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)') => {
     const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
     const screenshotUrl = getMediaUrl(item, 'screenshots');
     const videoUrl = getMediaUrl(item, 'video');
+    const [isHovered, setIsHovered] = useState(false);
 
     return (
-      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl scale-105 z-20' : 'scale-95 opacity-80 hover:border-blue-400'}`}>
+      <div 
+        className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}
+        style={{
+          transform: `scale(${scale}) translateY(${translateY}px)`,
+          opacity: opacity,
+          zIndex: zIndex,
+          filter: blur,
+          transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {(screenshotUrl || videoUrl) && (
           <div 
             className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer"
@@ -482,20 +590,24 @@ const App1 = () => {
           <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2 break-words`}>
             {item.project_title}
           </h3>
-          <p className="text-gray-600 mb-4 line-clamp-3">{item.description}</p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {toolsList.slice(0, 4).map((tool, idx) => (
-              <span key={idx} className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50">
+          
+          {/* Description - Hidden initially, shows on hover */}
+          <div className={`transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <p className="text-gray-600 mb-3">
+              {item.description}
+            </p>
+          </div>
+          
+          {/* Tools - Hidden initially, shows on hover */}
+          <div className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+            {toolsList.map((tool, idx) => (
+              <span key={idx} className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50 hover:border-blue-400 transition-all duration-300">
                 {tool}
               </span>
             ))}
-            {toolsList.length > 4 && (
-              <span className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50">
-                +{toolsList.length - 4}
-              </span>
-            )}
           </div>
-          <div className="flex gap-4">
+          
+          <div className="flex gap-4 mt-4">
             {item.github_link && (
               <a href={item.github_link} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition">
                 GitHub
@@ -512,10 +624,23 @@ const App1 = () => {
     );
   };
 
-  // Render certificate card
-  const renderCertificateCard = (cert, isCenter) => {
+  // Render certificate card with hover expand
+  const renderCertificateCard = (cert, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)') => {
+    const [isHovered, setIsHovered] = useState(false);
+
     return (
-      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl scale-105 z-20' : 'scale-95 opacity-80 hover:border-blue-400'}`}>
+      <div 
+        className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}
+        style={{
+          transform: `scale(${scale}) translateY(${translateY}px)`,
+          opacity: opacity,
+          zIndex: zIndex,
+          filter: blur,
+          transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {cert.certificate_image && (
           <div 
             className="relative h-48 overflow-hidden rounded-lg m-4 cursor-pointer group"
@@ -560,6 +685,29 @@ const App1 = () => {
     );
   };
 
+  // Handle drag/swipe
+  const handleDragStart = (e, type) => {
+    setIsDragging(true);
+    setIsPaused(true);
+    const pageX = e.type === 'touchstart' ? e.touches[0].pageX : e.pageX;
+    setStartX(pageX);
+    const ref = type === 'projects' ? projectSliderRef.current : certificateSliderRef.current;
+    if (ref) setScrollLeft(ref.scrollLeft);
+  };
+
+  const handleDragMove = (e, type) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const pageX = e.type === 'touchmove' ? e.touches[0].pageX : e.pageX;
+    const diff = (startX - pageX) * 0.8;
+    const ref = type === 'projects' ? projectSliderRef.current : certificateSliderRef.current;
+    if (ref) ref.scrollLeft = scrollLeft + diff;
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -586,8 +734,21 @@ const App1 = () => {
   }
 
   const filteredCertificates = getFilteredCertificates();
-  const visibleProjects = getVisibleItems(portfolio.projects, projectIndex);
-  const visibleCertificates = getVisibleItems(filteredCertificates, certIndex);
+  const visibleProjects = getVisibleItems(portfolio.projects, projectIndex, itemsPerView);
+  const visibleCertificates = getVisibleItems(filteredCertificates, certIndex, itemsPerView);
+
+  // Calculate padding for mobile/tablet to show adjacent cards
+  const getContainerPadding = () => {
+    if (itemsPerView === 1) return '15%';
+    if (itemsPerView === 2) return '8%';
+    return '0';
+  };
+
+  const getCardWidth = () => {
+    if (itemsPerView === 1) return 'w-[70%] max-w-[320px]';
+    if (itemsPerView === 2) return 'w-[45%] max-w-[320px]';
+    return 'w-[260px] md:w-[300px] lg:w-[320px]';
+  };
 
   return (
     <div className="bg-white">
@@ -766,7 +927,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section - Properly Centered Carousel */}
+      {/* Projects Section - Pyramidal Carousel with Adjacent Card Hints */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -797,24 +958,36 @@ const App1 = () => {
             </div>
           </div>
           
-          {/* Projects Carousel - Centered */}
-          <div className="relative w-full px-4">
+          {/* Projects Carousel - Pyramidal Effect */}
+          <div className="relative w-full px-4 overflow-hidden">
             <div 
               ref={projectSliderRef}
               className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory justify-center"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              style={{ 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none',
+                paddingLeft: getContainerPadding(),
+                paddingRight: getContainerPadding(),
+              }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={(e) => handleDragStart(e, 'projects')}
+              onTouchMove={(e) => handleDragMove(e, 'projects')}
+              onTouchEnd={handleDragEnd}
+              onMouseDown={(e) => handleDragStart(e, 'projects')}
+              onMouseMove={(e) => handleDragMove(e, 'projects')}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
             >
               {visibleProjects.map((project, idx) => (
                 <div 
                   key={idx} 
-                  className="w-[260px] md:w-[300px] lg:w-[320px] flex-shrink-0 snap-center transition-all duration-500 ease-in-out"
+                  className={`flex-shrink-0 snap-center transition-all duration-500 ease-in-out ${getCardWidth()}`}
                   style={{
-                    transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                    transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
                   }}
                 >
-                  {renderProjectCard(project, project.isCenter)}
+                  {renderProjectCard(project, project.isCenter, project.scale, project.translateY, project.opacity, project.zIndex, project.blur)}
                 </div>
               ))}
             </div>
@@ -852,7 +1025,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section - Properly Centered Carousel */}
+      {/* Certificates Section - Pyramidal Carousel with Adjacent Card Hints */}
       {visibleCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -883,24 +1056,36 @@ const App1 = () => {
             </div>
           </div>
 
-          {/* Certificates Carousel - Centered */}
-          <div className="relative w-full px-4">
+          {/* Certificates Carousel - Pyramidal Effect */}
+          <div className="relative w-full px-4 overflow-hidden">
             <div 
               ref={certificateSliderRef}
               className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory justify-center"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              style={{ 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none',
+                paddingLeft: getContainerPadding(),
+                paddingRight: getContainerPadding(),
+              }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={(e) => handleDragStart(e, 'certificates')}
+              onTouchMove={(e) => handleDragMove(e, 'certificates')}
+              onTouchEnd={handleDragEnd}
+              onMouseDown={(e) => handleDragStart(e, 'certificates')}
+              onMouseMove={(e) => handleDragMove(e, 'certificates')}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
             >
               {visibleCertificates.map((cert, idx) => (
                 <div 
                   key={idx} 
-                  className="w-[220px] md:w-[250px] lg:w-[280px] flex-shrink-0 snap-center transition-all duration-500 ease-in-out"
+                  className={`flex-shrink-0 snap-center transition-all duration-500 ease-in-out ${getCardWidth()}`}
                   style={{
-                    transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                    transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
                   }}
                 >
-                  {renderCertificateCard(cert, cert.isCenter)}
+                  {renderCertificateCard(cert, cert.isCenter, cert.scale, cert.translateY, cert.opacity, cert.zIndex, cert.blur)}
                 </div>
               ))}
             </div>
@@ -1188,7 +1373,7 @@ const SkillCard = ({ title, skills, icon }) => {
       <h3 className="text-xl font-semibold mb-4 text-gray-800">{title}</h3>
       <div className="flex flex-wrap gap-2">
         {skillsList.map((skill, index) => (
-          <span key={index} className="px-3 py-1 bg-gray-200/70 text-gray-800 rounded-full text-sm">
+          <span key={index} className="px-3 py-1 bg-gray-200/70 text-gray-800 rounded-full text-sm hover:bg-blue-100 hover:text-blue-700 transition-all duration-300">
             {skill}
           </span>
         ))}
@@ -1205,7 +1390,7 @@ const ExperienceCard = ({ experience }) => {
     <div className="relative pl-8 pb-8 border-l-2 border-gray-400">
       <div className="absolute w-4 h-4 bg-gray-700 rounded-full -left-[9px] top-0"></div>
       <div 
-        className="bg-white/50 backdrop-blur-sm rounded-lg p-6 ml-4 hover:shadow-md transition-all duration-300 border border-gray-200"
+        className="bg-white/50 backdrop-blur-sm rounded-lg p-6 ml-4 hover:shadow-xl transition-all duration-300 border border-gray-200"
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
       >
