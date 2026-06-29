@@ -122,7 +122,7 @@ const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, z
   );
 };
 
-// Certificate Card Component - Converted from renderCertificateCard function
+// Certificate Card Component
 const CertificateCard = ({ cert, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)', onImageClick, getMediaUrl, openImageZoom }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -580,100 +580,124 @@ const App1 = () => {
     ) || [];
   };
 
-  // Get visible items with pyramidal depth effect - showing adjacent cards as hints
+  // Get visible items with stacked pyramid effect - showing cards behind on both sides
   const getVisibleItems = (items, currentIndex, itemsPerView) => {
     if (!items || items.length === 0) return [];
     
     const total = items.length;
     const visible = [];
     
-    // For mobile (1 card), we want to show 3 items with the center one active
-    const effectiveItemsPerView = itemsPerView === 1 ? 3 : itemsPerView;
-    const effectiveHalfView = Math.floor(effectiveItemsPerView / 2);
+    // Number of cards to show on each side (stacked behind)
+    const cardsPerSide = 3; // Show 3 cards behind on each side
+    const totalCardsToShow = 1 + (cardsPerSide * 2); // Center + left + right
     
-    // Calculate if we're on mobile
     const isMobile = window.innerWidth < 640;
     const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
     
-    for (let i = 0; i < effectiveItemsPerView; i++) {
-      const offset = i - effectiveHalfView;
+    for (let i = 0; i < totalCardsToShow; i++) {
+      const offset = i - cardsPerSide;
       const idx = (currentIndex + offset + total) % total;
       const isCenter = offset === 0;
       const distance = Math.abs(offset);
       
       let scale, translateY, opacity, zIndex, blur, isVisible;
       
-      if (isMobile && itemsPerView === 1) {
-        // Mobile: Show center card full, adjacent cards as hints
+      // Calculate progressive scaling based on distance from center
+      if (isCenter) {
+        scale = 1;
+        translateY = 0;
+        opacity = 1;
+        zIndex = 30;
+        blur = 'blur(0px)';
+        isVisible = true;
+      } else if (distance === 1) {
+        // First layer behind - slightly smaller, visible
+        scale = 0.85;
+        translateY = 15;
+        opacity = 0.6;
+        zIndex = 20;
+        blur = 'blur(1px)';
+        isVisible = true;
+      } else if (distance === 2) {
+        // Second layer behind - smaller, more blurry
+        scale = 0.7;
+        translateY = 30;
+        opacity = 0.3;
+        zIndex = 15;
+        blur = 'blur(3px)';
+        isVisible = true;
+      } else if (distance === 3) {
+        // Third layer behind - very small, very blurry
+        scale = 0.55;
+        translateY = 45;
+        opacity = 0.12;
+        zIndex = 10;
+        blur = 'blur(5px)';
+        isVisible = true;
+      } else {
+        // Beyond 3 layers - hidden
+        scale = 0.4;
+        translateY = 60;
+        opacity = 0.05;
+        zIndex = 5;
+        blur = 'blur(7px)';
+        isVisible = false;
+      }
+      
+      // Adjust for mobile/tablet
+      if (isMobile) {
         if (isCenter) {
           scale = 1;
           translateY = 0;
           opacity = 1;
           zIndex = 30;
           blur = 'blur(0px)';
-          isVisible = true;
         } else if (distance === 1) {
           scale = 0.7;
-          translateY = 30;
-          opacity = 0.25;
-          zIndex = 10;
+          translateY = 25;
+          opacity = 0.3;
+          zIndex = 20;
           blur = 'blur(2px)';
-          isVisible = true;
-        } else {
+        } else if (distance === 2) {
           scale = 0.5;
+          translateY = 40;
+          opacity = 0.1;
+          zIndex = 15;
+          blur = 'blur(4px)';
+        } else {
+          scale = 0.3;
+          translateY = 55;
+          opacity = 0.04;
+          zIndex = 10;
+          blur = 'blur(6px)';
+          isVisible = false;
+        }
+      } else if (isTablet) {
+        if (isCenter) {
+          scale = 1;
+          translateY = 0;
+          opacity = 1;
+          zIndex = 30;
+          blur = 'blur(0px)';
+        } else if (distance === 1) {
+          scale = 0.8;
+          translateY = 20;
+          opacity = 0.5;
+          zIndex = 20;
+          blur = 'blur(1.5px)';
+        } else if (distance === 2) {
+          scale = 0.6;
+          translateY = 35;
+          opacity = 0.2;
+          zIndex = 15;
+          blur = 'blur(3.5px)';
+        } else {
+          scale = 0.4;
           translateY = 50;
           opacity = 0.08;
-          zIndex = 5;
-          blur = 'blur(4px)';
-          isVisible = true;
-        }
-      } else if (isTablet && itemsPerView === 2) {
-        // Tablet: Show center card and one adjacent, with hint of the other
-        if (isCenter) {
-          scale = 1;
-          translateY = 0;
-          opacity = 1;
-          zIndex = 30;
-          blur = 'blur(0px)';
-          isVisible = true;
-        } else if (distance === 1) {
-          scale = 0.85;
-          translateY = 20;
-          opacity = 0.7;
-          zIndex = 20;
-          blur = 'blur(0.5px)';
-          isVisible = true;
-        } else {
-          scale = 0.6;
-          translateY = 40;
-          opacity = 0.15;
           zIndex = 10;
-          blur = 'blur(3px)';
-          isVisible = true;
-        }
-      } else {
-        // Desktop: Normal pyramidal effect with 3 cards
-        if (isCenter) {
-          scale = 1;
-          translateY = 0;
-          opacity = 1;
-          zIndex = 30;
-          blur = 'blur(0px)';
-          isVisible = true;
-        } else if (distance === 1) {
-          scale = 0.9;
-          translateY = 20;
-          opacity = 0.7;
-          zIndex = 20;
-          blur = 'blur(0.5px)';
-          isVisible = true;
-        } else {
-          scale = 0.7;
-          translateY = 40;
-          opacity = 0.2;
-          zIndex = 10;
-          blur = 'blur(3px)';
-          isVisible = true;
+          blur = 'blur(5px)';
+          isVisible = false;
         }
       }
       
@@ -746,17 +770,10 @@ const App1 = () => {
   const visibleProjects = getVisibleItems(portfolio.projects, projectIndex, itemsPerView);
   const visibleCertificates = getVisibleItems(filteredCertificates, certIndex, itemsPerView);
 
-  // Calculate padding for mobile/tablet to show adjacent cards
-  const getContainerPadding = () => {
-    if (itemsPerView === 1) return '5%';
-    if (itemsPerView === 2) return '8%';
-    return '0';
-  };
-
   const getCardWidth = () => {
-    if (itemsPerView === 1) return 'w-[90%] max-w-[380px]';
-    if (itemsPerView === 2) return 'w-[45%] max-w-[320px]';
-    return 'w-[260px] md:w-[300px] lg:w-[320px]';
+    if (itemsPerView === 1) return 'w-[320px] max-w-[85vw]';
+    if (itemsPerView === 2) return 'w-[280px] max-w-[45vw]';
+    return 'w-[300px] max-w-[320px]';
   };
 
   return (
@@ -936,7 +953,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section - Pyramidal Carousel with Adjacent Card Hints */}
+      {/* Projects Section - Stacked Pyramid Carousel */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -967,16 +984,17 @@ const App1 = () => {
             </div>
           </div>
           
-          {/* Projects Carousel - Pyramidal Effect */}
-          <div className="relative w-full px-4 overflow-hidden">
+          {/* Projects Carousel - Stacked Pyramid Effect */}
+          <div className="relative w-full px-4 overflow-visible">
             <div 
               ref={projectSliderRef}
-              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory justify-center"
+              className="flex gap-4 overflow-x-visible pb-6 snap-x snap-mandatory justify-center items-center"
               style={{ 
                 scrollbarWidth: 'none', 
                 msOverflowStyle: 'none',
-                paddingLeft: getContainerPadding(),
-                paddingRight: getContainerPadding(),
+                paddingLeft: '0',
+                paddingRight: '0',
+                minHeight: '500px',
               }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
@@ -988,30 +1006,44 @@ const App1 = () => {
               onMouseUp={handleDragEnd}
               onMouseLeave={handleDragEnd}
             >
-              {visibleProjects.map((project, idx) => (
-                <div 
-                  key={idx} 
-                  className={`flex-shrink-0 snap-center transition-all duration-500 ease-in-out ${getCardWidth()}`}
-                  style={{
-                    transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
-                  }}
-                >
-                  <ProjectCard 
-                    item={project}
-                    isCenter={project.isCenter}
-                    scale={project.scale}
-                    translateY={project.translateY}
-                    opacity={project.opacity}
-                    zIndex={project.zIndex}
-                    blur={project.blur}
-                    onImageClick={openImageZoom}
-                    onVideoClick={openVideoFullscreen}
-                    getMediaUrl={getMediaUrl}
-                    openImageZoom={openImageZoom}
-                    openVideoFullscreen={openVideoFullscreen}
-                  />
-                </div>
-              ))}
+              {visibleProjects.map((project, idx) => {
+                const offset = project.position || 0;
+                const isVisible = project.isVisible !== false;
+                
+                return (
+                  <div 
+                    key={`${project.originalIndex}-${idx}`} 
+                    className={`flex-shrink-0 snap-center transition-all duration-500 ease-in-out ${getCardWidth()}`}
+                    style={{
+                      transform: `scale(${project.scale}) translateY(${project.translateY}px)`,
+                      opacity: project.opacity,
+                      zIndex: project.zIndex,
+                      filter: project.blur,
+                      transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
+                      pointerEvents: project.isCenter ? 'auto' : 'none',
+                      marginLeft: offset < 0 ? `${Math.abs(offset) * 15}px` : '0',
+                      marginRight: offset > 0 ? `${offset * 15}px` : '0',
+                    }}
+                  >
+                    {isVisible && (
+                      <ProjectCard 
+                        item={project}
+                        isCenter={project.isCenter}
+                        scale={1}
+                        translateY={0}
+                        opacity={1}
+                        zIndex={project.zIndex}
+                        blur="blur(0px)"
+                        onImageClick={openImageZoom}
+                        onVideoClick={openVideoFullscreen}
+                        getMediaUrl={getMediaUrl}
+                        openImageZoom={openImageZoom}
+                        openVideoFullscreen={openVideoFullscreen}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -1047,7 +1079,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section - Pyramidal Carousel with Adjacent Card Hints */}
+      {/* Certificates Section - Stacked Pyramid Carousel */}
       {visibleCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -1078,16 +1110,17 @@ const App1 = () => {
             </div>
           </div>
 
-          {/* Certificates Carousel - Pyramidal Effect */}
-          <div className="relative w-full px-4 overflow-hidden">
+          {/* Certificates Carousel - Stacked Pyramid Effect */}
+          <div className="relative w-full px-4 overflow-visible">
             <div 
               ref={certificateSliderRef}
-              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory justify-center"
+              className="flex gap-4 overflow-x-visible pb-6 snap-x snap-mandatory justify-center items-center"
               style={{ 
                 scrollbarWidth: 'none', 
                 msOverflowStyle: 'none',
-                paddingLeft: getContainerPadding(),
-                paddingRight: getContainerPadding(),
+                paddingLeft: '0',
+                paddingRight: '0',
+                minHeight: '480px',
               }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
@@ -1099,28 +1132,42 @@ const App1 = () => {
               onMouseUp={handleDragEnd}
               onMouseLeave={handleDragEnd}
             >
-              {visibleCertificates.map((cert, idx) => (
-                <div 
-                  key={idx} 
-                  className={`flex-shrink-0 snap-center transition-all duration-500 ease-in-out ${getCardWidth()}`}
-                  style={{
-                    transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
-                  }}
-                >
-                  <CertificateCard 
-                    cert={cert}
-                    isCenter={cert.isCenter}
-                    scale={cert.scale}
-                    translateY={cert.translateY}
-                    opacity={cert.opacity}
-                    zIndex={cert.zIndex}
-                    blur={cert.blur}
-                    onImageClick={openImageZoom}
-                    getMediaUrl={getMediaUrl}
-                    openImageZoom={openImageZoom}
-                  />
-                </div>
-              ))}
+              {visibleCertificates.map((cert, idx) => {
+                const offset = cert.position || 0;
+                const isVisible = cert.isVisible !== false;
+                
+                return (
+                  <div 
+                    key={`${cert.originalIndex}-${idx}`} 
+                    className={`flex-shrink-0 snap-center transition-all duration-500 ease-in-out ${getCardWidth()}`}
+                    style={{
+                      transform: `scale(${cert.scale}) translateY(${cert.translateY}px)`,
+                      opacity: cert.opacity,
+                      zIndex: cert.zIndex,
+                      filter: cert.blur,
+                      transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
+                      pointerEvents: cert.isCenter ? 'auto' : 'none',
+                      marginLeft: offset < 0 ? `${Math.abs(offset) * 15}px` : '0',
+                      marginRight: offset > 0 ? `${offset * 15}px` : '0',
+                    }}
+                  >
+                    {isVisible && (
+                      <CertificateCard 
+                        cert={cert}
+                        isCenter={cert.isCenter}
+                        scale={1}
+                        translateY={0}
+                        opacity={1}
+                        zIndex={cert.zIndex}
+                        blur="blur(0px)"
+                        onImageClick={openImageZoom}
+                        getMediaUrl={getMediaUrl}
+                        openImageZoom={openImageZoom}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
