@@ -884,133 +884,109 @@ const App1 = () => {
       )}
 
       {/* Projects Section */}
-      {portfolio.projects?.length > 0 && (
-        <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm overflow-hidden">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Featured Projects</h2>
-            
-            {/* Navigation Arrows - Increased Z-Index to z-40 */}
-            {portfolio.projects.length > 1 && (
-              <div className="flex justify-center gap-3 mb-6 relative z-40">
-                <button 
-                  onClick={() => goToPrev('projects')}
-                  className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 w-10 h-10 flex items-center justify-center"
-                >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button 
-                  onClick={() => goToNext('projects')}
-                  className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 w-10 h-10 flex items-center justify-center"
-                >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            )}
+{portfolio.projects?.length > 0 && (
+  <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm overflow-hidden">
+    <div className="container mx-auto px-4">
+      <h2 className="text-3xl font-bold text-center mb-10 text-gray-900">Featured Projects</h2>
+      
+      {/* Wrapper for Slider and Absolute Arrows */}
+      <div className="relative max-w-6xl mx-auto">
+        
+        {/* LEFT NAVIGATION ARROW */}
+        <button 
+          onClick={() => goToPrev('projects')} 
+          className="absolute left-[-10px] md:left-[-20px] top-1/2 -translate-y-1/2 z-[110] p-3 bg-white/90 shadow-xl rounded-full hover:bg-blue-600 hover:text-white transition-all border border-gray-100 group"
+          aria-label="Previous Project"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M15 19l-7-7 7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
 
-            <div className="relative w-full">
-              {isMobile ? (
-                /* MOBILE VIEW: Side cards touch the center card exactly */
-                <div className="flex justify-center items-center relative py-10" style={{ minHeight: '400px' }}>
-                  {/* Center Anchor Card */}
-                  <div className="w-[75%] max-w-[320px] relative z-20 shadow-2xl">
-                    <ProjectCard 
-                      item={projectCards.center}
-                      isCenter={true}
-                      onImageClick={openImageZoom}
-                      onVideoClick={openVideoFullscreen}
-                      getMediaUrl={getMediaUrl}
-                    />
-                    
-                    {/* Left Card - Pinned to left edge of center */}
-                    {projectCards.left && (
-                      <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
-                        <div className="transform scale-90 origin-right opacity-40 blur-[2px]">
-                          <ProjectCard 
-                            item={projectCards.left}
-                            isCenter={false}
-                            isBlurred={true}
-                            onImageClick={openImageZoom}
-                            onVideoClick={openVideoFullscreen}
-                            getMediaUrl={getMediaUrl}
-                          />
-                        </div>
-                      </div>
-                    )}
+        {/* RIGHT NAVIGATION ARROW */}
+        <button 
+          onClick={() => goToNext('projects')} 
+          className="absolute right-[-10px] md:right-[-20px] top-1/2 -translate-y-1/2 z-[110] p-3 bg-white/90 shadow-xl rounded-full hover:bg-blue-600 hover:text-white transition-all border border-gray-100 group"
+          aria-label="Next Project"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 5l7 7-7 7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
 
-                    {/* Right Card - Pinned to right edge of center */}
-                    {projectCards.right && (
-                      <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
-                        <div className="transform scale-90 origin-left opacity-40 blur-[2px]">
-                          <ProjectCard 
-                            item={projectCards.right}
-                            isCenter={false}
-                            isBlurred={true}
-                            onImageClick={openImageZoom}
-                            onVideoClick={openVideoFullscreen}
-                            getMediaUrl={getMediaUrl}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                /* DESKTOP VIEW */
-                <div 
-                  ref={projectSliderRef}
-                  className="flex gap-4 overflow-x-auto pb-6 justify-center items-start relative z-10"
-                  style={{ scrollbarWidth: 'none', minHeight: '500px' }}
-                  onMouseEnter={() => setIsPaused(true)}
-                  onMouseLeave={() => setIsPaused(false)}
-                >
-                  {Array.isArray(projectCards) && projectCards.map((project, idx) => (
-                    <div 
-                      key={`${project.originalIndex}-${idx}`} 
-                      className="flex-shrink-0 transition-all duration-500"
-                      style={{
-                        width: project.isCenter ? '320px' : '260px',
-                        transform: `scale(${project.scale}) translateY(${project.translateY}px)`,
-                        opacity: project.opacity,
-                        zIndex: project.zIndex,
-                        filter: project.blur,
-                        pointerEvents: project.isCenter ? 'auto' : 'none',
-                      }}
-                    >
-                      <ProjectCard 
-                        item={project}
-                        isCenter={project.isCenter}
-                        onImageClick={openImageZoom}
-                        onVideoClick={openVideoFullscreen}
-                        getMediaUrl={getMediaUrl}
-                      />
+        {/* PROJECT SLIDER CONTENT */}
+        <div className="relative w-full">
+          {isMobile ? (
+            /* MOBILE: Pinned-edge horizontal layout */
+            <div className="flex justify-center items-center relative py-5 h-[420px]">
+              <div className="w-[75%] max-w-[300px] relative z-20">
+                <ProjectCard item={projectCards.center} isCenter={true} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
+                
+                {/* Left Side (Touching) */}
+                {projectCards.left && (
+                  <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
+                    <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[1px] translate-x-[1px]">
+                      <ProjectCard item={projectCards.left} isCenter={false} getMediaUrl={getMediaUrl} />
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
+                )}
 
-            {/* Pagination Dots */}
-            {portfolio.projects.length > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
-                {portfolio.projects.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => goToSlide('projects', idx)}
-                    aria-label={`Go to slide ${idx + 1}`}
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                      idx === projectIndex ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
-                    }`}
-                  />
-                ))}
+                {/* Right Side (Touching) */}
+                {projectCards.right && (
+                  <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
+                    <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[1px] -translate-x-[1px]">
+                      <ProjectCard item={projectCards.right} isCenter={false} getMediaUrl={getMediaUrl} />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </section>
-      )}
+            </div>
+          ) : (
+            /* DESKTOP: Pyramid Effect */
+            <div className="flex gap-4 overflow-visible pb-6 justify-center items-start h-[520px]">
+              {projectCards.map((p, idx) => (
+                <div 
+                  key={idx}
+                  className="flex-shrink-0 transition-all duration-500"
+                  style={{
+                    width: p.isCenter ? '320px' : '260px',
+                    transform: `scale(${p.scale}) translateY(${p.translateY}px)`,
+                    opacity: p.opacity,
+                    zIndex: p.zIndex,
+                    filter: p.blur,
+                    pointerEvents: p.isCenter ? 'auto' : 'none'
+                  }}
+                >
+                  <ProjectCard item={p} isCenter={p.isCenter} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Optional: Pagination Dots (Matches certificates) */}
+      <div className="flex justify-center gap-2 mt-4">
+        {portfolio.projects.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setProjectIndex(idx)}
+            className={`w-2 h-2 rounded-full transition-all ${idx === projectIndex ? 'bg-blue-600 w-6' : 'bg-gray-300'}`}
+          />
+        ))}
+      </div>
+
+    </div>
+  </section>
+)}
+                  
+
+
+
+
+
+
+
 
       {/* Experience Section */}
       {portfolio.experience?.length > 0 && (
