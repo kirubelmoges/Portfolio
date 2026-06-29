@@ -653,23 +653,23 @@ const App1 = () => {
           zIndex = 30;
           blur = 'blur(0px)';
         } else if (distance === 1) {
-          scale = 0.65;
-          translateY = 25;
-          opacity = 0.25;
+          scale = 0.6;
+          translateY = 20;
+          opacity = 0.2;
           zIndex = 20;
-          blur = 'blur(3px)';
+          blur = 'blur(4px)';
         } else if (distance === 2) {
-          scale = 0.4;
-          translateY = 40;
-          opacity = 0.08;
+          scale = 0.35;
+          translateY = 35;
+          opacity = 0.06;
           zIndex = 15;
-          blur = 'blur(5px)';
+          blur = 'blur(6px)';
         } else {
-          scale = 0.25;
-          translateY = 55;
-          opacity = 0.03;
+          scale = 0.2;
+          translateY = 50;
+          opacity = 0.02;
           zIndex = 10;
-          blur = 'blur(7px)';
+          blur = 'blur(8px)';
           isVisible = false;
         }
       } else if (isTablet) {
@@ -774,6 +774,30 @@ const App1 = () => {
     if (itemsPerView === 1) return 'w-[90%] max-w-[380px]';
     if (itemsPerView === 2) return 'w-[280px] max-w-[45vw]';
     return 'w-[300px] max-w-[320px]';
+  };
+
+  // Get gap between cards based on screen size
+  const getGap = () => {
+    const isMobile = window.innerWidth < 640;
+    return isMobile ? 'gap-1' : 'gap-4';
+  };
+
+  // Get margin offset for mobile to bring blurred cards closer
+  const getMarginOffset = (offset) => {
+    const isMobile = window.innerWidth < 640;
+    if (isMobile) {
+      // On mobile, reduce the margin to bring cards closer together
+      return offset < 0 ? `${Math.abs(offset) * 5}px` : '0';
+    }
+    return offset < 0 ? `${Math.abs(offset) * 15}px` : '0';
+  };
+
+  const getMarginRightOffset = (offset) => {
+    const isMobile = window.innerWidth < 640;
+    if (isMobile) {
+      return offset > 0 ? `${offset * 5}px` : '0';
+    }
+    return offset > 0 ? `${offset * 15}px` : '0';
   };
 
   return (
@@ -988,7 +1012,7 @@ const App1 = () => {
           <div className="relative w-full px-4 overflow-visible">
             <div 
               ref={projectSliderRef}
-              className="flex gap-4 overflow-x-visible pb-6 snap-x snap-mandatory justify-center items-center"
+              className={`flex ${getGap()} overflow-x-visible pb-6 snap-x snap-mandatory justify-center items-center`}
               style={{ 
                 scrollbarWidth: 'none', 
                 msOverflowStyle: 'none',
@@ -1009,6 +1033,7 @@ const App1 = () => {
               {visibleProjects.map((project, idx) => {
                 const offset = project.position || 0;
                 const isVisible = project.isVisible !== false;
+                const isMobile = window.innerWidth < 640;
                 
                 return (
                   <div 
@@ -1021,8 +1046,8 @@ const App1 = () => {
                       filter: project.blur,
                       transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
                       pointerEvents: project.isCenter ? 'auto' : 'none',
-                      marginLeft: offset < 0 ? `${Math.abs(offset) * 15}px` : '0',
-                      marginRight: offset > 0 ? `${offset * 15}px` : '0',
+                      marginLeft: isMobile ? (offset < 0 ? `${Math.abs(offset) * 5}px` : '0') : (offset < 0 ? `${Math.abs(offset) * 15}px` : '0'),
+                      marginRight: isMobile ? (offset > 0 ? `${offset * 5}px` : '0') : (offset > 0 ? `${offset * 15}px` : '0'),
                     }}
                   >
                     {isVisible && (
@@ -1114,7 +1139,7 @@ const App1 = () => {
           <div className="relative w-full px-4 overflow-visible">
             <div 
               ref={certificateSliderRef}
-              className="flex gap-4 overflow-x-visible pb-6 snap-x snap-mandatory justify-center items-center"
+              className={`flex ${getGap()} overflow-x-visible pb-6 snap-x snap-mandatory justify-center items-center`}
               style={{ 
                 scrollbarWidth: 'none', 
                 msOverflowStyle: 'none',
@@ -1135,6 +1160,7 @@ const App1 = () => {
               {visibleCertificates.map((cert, idx) => {
                 const offset = cert.position || 0;
                 const isVisible = cert.isVisible !== false;
+                const isMobile = window.innerWidth < 640;
                 
                 return (
                   <div 
@@ -1147,8 +1173,8 @@ const App1 = () => {
                       filter: cert.blur,
                       transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
                       pointerEvents: cert.isCenter ? 'auto' : 'none',
-                      marginLeft: offset < 0 ? `${Math.abs(offset) * 15}px` : '0',
-                      marginRight: offset > 0 ? `${offset * 15}px` : '0',
+                      marginLeft: isMobile ? (offset < 0 ? `${Math.abs(offset) * 5}px` : '0') : (offset < 0 ? `${Math.abs(offset) * 15}px` : '0'),
+                      marginRight: isMobile ? (offset > 0 ? `${offset * 5}px` : '0') : (offset > 0 ? `${offset * 15}px` : '0'),
                     }}
                   >
                     {isVisible && (
