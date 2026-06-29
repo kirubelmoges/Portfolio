@@ -4,6 +4,176 @@ import './App.css';
 const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
 const MEDIA_URL = 'https://portfolio-backend-ee1z.onrender.com';
 
+// Project Card Component - Converted from renderProjectCard function
+const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)', onImageClick, onVideoClick, getMediaUrl, openImageZoom, openVideoFullscreen }) => {
+  const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
+  const screenshotUrl = getMediaUrl(item, 'screenshots');
+  const videoUrl = getMediaUrl(item, 'video');
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div 
+      className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}
+      style={{
+        transform: `scale(${scale}) translateY(${translateY}px)`,
+        opacity: opacity,
+        zIndex: zIndex,
+        filter: blur,
+        transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {(screenshotUrl || videoUrl) && (
+        <div 
+          className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer"
+          onClick={() => {
+            if (videoUrl && !screenshotUrl) {
+              onVideoClick(videoUrl, item.project_title);
+            } else if (screenshotUrl) {
+              onImageClick(screenshotUrl, item.project_title);
+            }
+          }}
+        >
+          {screenshotUrl && (
+            <img
+              src={screenshotUrl}
+              alt={item.project_title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              onError={(e) => {
+                const fallback = item.screenshots;
+                if (fallback) {
+                  e.target.src = getMediaUrl(item, 'screenshots');
+                }
+              }}
+            />
+          )}
+          {!screenshotUrl && videoUrl && (
+            <video className="w-full h-full object-cover" src={videoUrl} />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30 transform scale-90 group-hover:scale-100 transition-transform duration-500">
+              {videoUrl && !screenshotUrl ? (
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : (
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                </svg>
+              )}
+            </div>
+          </div>
+          {videoUrl && (
+            <div className="absolute top-3 right-3 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              Video
+            </div>
+          )}
+        </div>
+      )}
+      <div className="p-6">
+        <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2 break-words`}>
+          {item.project_title}
+        </h3>
+        
+        {/* Description - Hidden initially, shows on hover */}
+        <div className={`transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <p className="text-gray-600 mb-3">
+            {item.description}
+          </p>
+        </div>
+        
+        {/* Tools - Hidden initially, shows on hover */}
+        <div className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+          {toolsList.map((tool, idx) => (
+            <span key={idx} className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50 hover:border-blue-400 transition-all duration-300">
+              {tool}
+            </span>
+          ))}
+        </div>
+        
+        <div className="flex gap-4 mt-4">
+          {item.github_link && (
+            <a href={item.github_link} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition">
+              GitHub
+            </a>
+          )}
+          {item.url && (
+            <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition">
+              Live Demo
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Certificate Card Component - Converted from renderCertificateCard function
+const CertificateCard = ({ cert, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)', onImageClick, getMediaUrl, openImageZoom }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div 
+      className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}
+      style={{
+        transform: `scale(${scale}) translateY(${translateY}px)`,
+        opacity: opacity,
+        zIndex: zIndex,
+        filter: blur,
+        transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {cert.certificate_image && (
+        <div 
+          className="relative h-48 overflow-hidden rounded-lg m-4 cursor-pointer group"
+          onClick={() => onImageClick(getMediaUrl(cert, 'certificate_image'), cert.certificate_name)}
+        >
+          <img
+            src={getMediaUrl(cert, 'certificate_image')}
+            alt={cert.certificate_name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={(e) => {
+              const fallback = cert.certificate_image;
+              if (fallback) {
+                e.target.src = getMediaUrl(cert, 'certificate_image');
+              }
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="p-6 pt-0">
+        <h3 className={`text-lg font-bold mb-1 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2 break-words`}>
+          {cert.certificate_name}
+        </h3>
+        {cert.certificate_link && (
+          <a 
+            href={cert.certificate_link} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="inline-block mt-3 text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
+          >
+            View Certificate →
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const App1 = () => {
   const [portfolio, setPortfolio] = useState({
     introduction: null,
@@ -515,176 +685,6 @@ const App1 = () => {
     return visible;
   };
 
-  // Render project card with hover expand
-  const renderProjectCard = (item, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)') => {
-    const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
-    const screenshotUrl = getMediaUrl(item, 'screenshots');
-    const videoUrl = getMediaUrl(item, 'video');
-    const [isHovered, setIsHovered] = useState(false);
-
-    return (
-      <div 
-        className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}
-        style={{
-          transform: `scale(${scale}) translateY(${translateY}px)`,
-          opacity: opacity,
-          zIndex: zIndex,
-          filter: blur,
-          transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
-        }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {(screenshotUrl || videoUrl) && (
-          <div 
-            className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer"
-            onClick={() => {
-              if (videoUrl && !screenshotUrl) {
-                openVideoFullscreen(videoUrl, item.project_title);
-              } else if (screenshotUrl) {
-                openImageZoom(screenshotUrl, item.project_title);
-              }
-            }}
-          >
-            {screenshotUrl && (
-              <img
-                src={screenshotUrl}
-                alt={item.project_title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                onError={(e) => {
-                  const fallback = item.screenshots;
-                  if (fallback) {
-                    e.target.src = getMediaUrl(item, 'screenshots');
-                  }
-                }}
-              />
-            )}
-            {!screenshotUrl && videoUrl && (
-              <video className="w-full h-full object-cover" src={videoUrl} />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30 transform scale-90 group-hover:scale-100 transition-transform duration-500">
-                {videoUrl && !screenshotUrl ? (
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ) : (
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                  </svg>
-                )}
-              </div>
-            </div>
-            {videoUrl && (
-              <div className="absolute top-3 right-3 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-                Video
-              </div>
-            )}
-          </div>
-        )}
-        <div className="p-6">
-          <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2 break-words`}>
-            {item.project_title}
-          </h3>
-          
-          {/* Description - Hidden initially, shows on hover */}
-          <div className={`transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-            <p className="text-gray-600 mb-3">
-              {item.description}
-            </p>
-          </div>
-          
-          {/* Tools - Hidden initially, shows on hover */}
-          <div className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-            {toolsList.map((tool, idx) => (
-              <span key={idx} className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50 hover:border-blue-400 transition-all duration-300">
-                {tool}
-              </span>
-            ))}
-          </div>
-          
-          <div className="flex gap-4 mt-4">
-            {item.github_link && (
-              <a href={item.github_link} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition">
-                GitHub
-              </a>
-            )}
-            {item.url && (
-              <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition">
-                Live Demo
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Render certificate card with hover expand
-  const renderCertificateCard = (cert, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)') => {
-    const [isHovered, setIsHovered] = useState(false);
-
-    return (
-      <div 
-        className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}
-        style={{
-          transform: `scale(${scale}) translateY(${translateY}px)`,
-          opacity: opacity,
-          zIndex: zIndex,
-          filter: blur,
-          transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
-        }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {cert.certificate_image && (
-          <div 
-            className="relative h-48 overflow-hidden rounded-lg m-4 cursor-pointer group"
-            onClick={() => openImageZoom(getMediaUrl(cert, 'certificate_image'), cert.certificate_name)}
-          >
-            <img
-              src={getMediaUrl(cert, 'certificate_image')}
-              alt={cert.certificate_name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              onError={(e) => {
-                const fallback = cert.certificate_image;
-                if (fallback) {
-                  e.target.src = getMediaUrl(cert, 'certificate_image');
-                }
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="p-6 pt-0">
-          <h3 className={`text-lg font-bold mb-1 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2 break-words`}>
-            {cert.certificate_name}
-          </h3>
-          {cert.certificate_link && (
-            <a 
-              href={cert.certificate_link} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="inline-block mt-3 text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
-            >
-              View Certificate →
-            </a>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   // Handle drag/swipe
   const handleDragStart = (e, type) => {
     setIsDragging(true);
@@ -919,9 +919,9 @@ const App1 = () => {
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Technical Skills</h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <SkillCard title="Languages" skills={portfolio.skills[0].language} icon="" />
-              <SkillCard title="Frameworks" skills={portfolio.skills[0].framework} icon="" />
-              <SkillCard title="Tools" skills={portfolio.skills[0].tools} icon="" />
+              <SkillCard title="Languages" skills={portfolio.skills[0].language} icon="💻" />
+              <SkillCard title="Frameworks" skills={portfolio.skills[0].framework} icon="🚀" />
+              <SkillCard title="Tools" skills={portfolio.skills[0].tools} icon="🛠️" />
             </div>
           </div>
         </section>
@@ -987,7 +987,20 @@ const App1 = () => {
                     transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
                   }}
                 >
-                  {renderProjectCard(project, project.isCenter, project.scale, project.translateY, project.opacity, project.zIndex, project.blur)}
+                  <ProjectCard 
+                    item={project}
+                    isCenter={project.isCenter}
+                    scale={project.scale}
+                    translateY={project.translateY}
+                    opacity={project.opacity}
+                    zIndex={project.zIndex}
+                    blur={project.blur}
+                    onImageClick={openImageZoom}
+                    onVideoClick={openVideoFullscreen}
+                    getMediaUrl={getMediaUrl}
+                    openImageZoom={openImageZoom}
+                    openVideoFullscreen={openVideoFullscreen}
+                  />
                 </div>
               ))}
             </div>
@@ -1085,7 +1098,18 @@ const App1 = () => {
                     transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease',
                   }}
                 >
-                  {renderCertificateCard(cert, cert.isCenter, cert.scale, cert.translateY, cert.opacity, cert.zIndex, cert.blur)}
+                  <CertificateCard 
+                    cert={cert}
+                    isCenter={cert.isCenter}
+                    scale={cert.scale}
+                    translateY={cert.translateY}
+                    opacity={cert.opacity}
+                    zIndex={cert.zIndex}
+                    blur={cert.blur}
+                    onImageClick={openImageZoom}
+                    getMediaUrl={getMediaUrl}
+                    openImageZoom={openImageZoom}
+                  />
                 </div>
               ))}
             </div>
@@ -1189,10 +1213,10 @@ const App1 = () => {
             <div className="max-w-4xl mx-auto">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <ContactItem icon="✉" label="Email" value={portfolio.contact.email} link={`mailto:${portfolio.contact.email}`} />
-                  <ContactItem icon="🌐" label="LinkedIn" value={portfolio.contact.linkedin} link={portfolio.contact.linkedin} />
-                  <ContactItem icon="💻" label="GitHub" value={portfolio.contact.github} link={portfolio.contact.github} />
-                  <ContactItem icon="📞" label="Phone" value={portfolio.contact.phone} link={`tel:${portfolio.contact.phone}`} />
+                  <ContactItem icon="📧" label="Email" value={portfolio.contact.email} link={`mailto:${portfolio.contact.email}`} />
+                  <ContactItem icon="🔗" label="LinkedIn" value={portfolio.contact.linkedin} link={portfolio.contact.linkedin} />
+                  <ContactItem icon="🐙" label="GitHub" value={portfolio.contact.github} link={portfolio.contact.github} />
+                  <ContactItem icon="📱" label="Phone" value={portfolio.contact.phone} link={`tel:${portfolio.contact.phone}`} />
                 </div>
                 <ContactForm />
               </div>
