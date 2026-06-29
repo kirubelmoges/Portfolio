@@ -314,68 +314,6 @@ const App1 = () => {
       if (!response.ok) throw new Error('Failed to fetch data');
       const data = await response.json();
       
-      // Get all certificates
-      const certs = data.certificates || [];
-      
-      // Function to check if certificate has a file
-      const hasFile = (cert) => {
-        return cert.certificate_image || cert.certificate_image_url;
-      };
-      
-      // Function to check if file is a Resume (from filename)
-      const isResume = (cert) => {
-        if (!hasFile(cert)) return false;
-        
-        const name = cert.certificate_name?.toLowerCase() || '';
-        const filePath = cert.certificate_image || '';
-        const fileName = filePath.split('/').pop()?.toLowerCase() || '';
-        const url = cert.certificate_image_url || '';
-        const urlFileName = url.split('/').pop()?.toLowerCase() || '';
-        
-        return name.includes('resume') || 
-               fileName.includes('resume') || 
-               urlFileName.includes('resume');
-      };
-      
-      // Function to check if file is a CV (from filename)
-      const isCV = (cert) => {
-        if (!hasFile(cert)) return false;
-        
-        const name = cert.certificate_name?.toLowerCase() || '';
-        const filePath = cert.certificate_image || '';
-        const fileName = filePath.split('/').pop()?.toLowerCase() || '';
-        const url = cert.certificate_image_url || '';
-        const urlFileName = url.split('/').pop()?.toLowerCase() || '';
-        
-        return name.includes('cv') || 
-               name.includes('curriculum vitae') ||
-               fileName.includes('cv') || 
-               urlFileName.includes('cv');
-      };
-      
-      // Filter: Find certificates with files
-      const certificatesWithFiles = certs.filter(cert => hasFile(cert));
-      
-      // Filter: Find Resume from those with files
-      const resumeItems = certificatesWithFiles.filter(cert => isResume(cert));
-      
-      // Filter: Find CV from those with files
-      const cvItems = certificatesWithFiles.filter(cert => isCV(cert));
-      
-      // Remove duplicates (if a file is both Resume and CV, keep it in Resume)
-      const uniqueCVItems = cvItems.filter(cv => 
-        !resumeItems.some(resume => resume.id === cv.id)
-      );
-      
-      // Combine for the Resume section
-      data.resume = [...resumeItems, ...uniqueCVItems];
-      
-      // Log for debugging
-      console.log('Total Certificates:', certs.length);
-      console.log('Certificates with Files:', certificatesWithFiles.length);
-      console.log('Resume Items:', resumeItems);
-      console.log('CV Items:', cvItems);
-      
       if (isMounted.current) {
         setPortfolio(data);
         setLoading(false);
@@ -390,14 +328,6 @@ const App1 = () => {
 
   const getMediaUrl = (item, fieldName) => {
     if (!item) return null;
-    
-    // Check if certificate has image
-    if (item.certificate_image_url) {
-      return item.certificate_image_url;
-    }
-    if (item.certificate_image) {
-      return getFileUrl(item.certificate_image);
-    }
     
     const cloudinaryFields = {
       'image': 'image_url',
@@ -436,94 +366,154 @@ const App1 = () => {
     return `${MEDIA_URL}/media/${filePath}`;
   };
 
-  const handleDownloadResume = async () => {
-    // Get Resume items from certificates
-    const allCerts = portfolio.certificates || [];
+  // Function to get Resume and CV from both models
+  const getResumeAndCVItems = () => {
+    const items = [];
+    const seenUrls = new Set();
     
-    const resumeItems = allCerts.filter(cert => {
-      const name = cert.certificate_name?.toLowerCase() || '';
-      const filePath = cert.certificate_image || '';
-      const fileName = filePath.split('/').pop()?.toLowerCase() || '';
-      const url = cert.certificate_image_url || '';
-      const urlFileName = url.split('/').pop()?.toLowerCase() || '';
-      
-      return name.includes('resume') || 
-             fileName.includes('resume') || 
-             urlFileName.includes('resume');
+    // 1. FIRST: Check Certificate model - specifically ID 26 (CV) and ID 27 (Resume)
+    const certs = portfolio.certificates || [];
+    certs.forEach(cert => {
+      // Check if certificate has a cv file
+      if (cert.cv) {
+        const fileUrl = cert.cv.startsWith('http') ? cert.cv : getFileUrl(cert.cv);
+        
+        // Determine type based on ID or filename
+        let type = 'cv';
+        let displayName = cert.certificate_name || 'CV';
+        
+        // ID 27 is Resume
+        if (cert.id === 27) {
+          type = 'resume';
+          displayName = 'Resume - ' + cert.certificate_name;
+        }
+        // ID 26 is CV
+        else if (cert.id === 26) {
+          type = 'cv';
+          displayName = 'CV - ' + cert.certificate_name;
+        }
+        // Check filename for other certificates
+        else if (fileUrl && fileUrl.toLowerCase().includes('resume')) {
+          type = 'resume';
+          displayName = cert.certificate_name || 'Resume';
+        }
+        else if (fileUrl && fileUrl.toLowerCase().includes('cv')) {
+          type = 'cv';
+          displayName = cert.certificate_name || 'CV';
+        }
+        
+        if (fileUrl && !seenUrls.has(fileUrl)) {
+          seenUrls.add(fileUrl);
+          items.push({
+            id: `cert-${cert.id}`,
+            name: displayName,
+            type: type,
+            fileUrl: fileUrl,
+            source: 'certificate_model',
+            certId: cert.id
+          });
+        }
+      }
     });
     
-    if (resumeItems.length === 0) {
-      alert('Resume file not found. Please upload a resume in the admin panel.');
+    // 2. SECOND: Check Resume model (has 3 entries with both resume and cv files)
+    const resumeData = portfolio.resume || [];
+    resumeData.forEach(item => {
+      // Check for Resume file
+      const resumeFile = item.resume_file_url || item.resume_file;
+      if (resumeFile && !seenUrls.has(resumeFile)) {
+        seenUrls.add(resumeFile);
+        items.push({
+          id: `resume-${item.id}-resume`,
+          name: item.resume_name || 'Resume',
+          type: 'resume',
+          fileUrl: resumeFile,
+          source: 'resume_model'
+        });
+      }
+      
+      // Check for CV file
+      const cvFile = item.cv_file_url || item.cv_file;
+      if (cvFile && !seenUrls.has(cvFile)) {
+        seenUrls.add(cvFile);
+        items.push({
+          id: `resume-${item.id}-cv`,
+          name: item.resume_name || 'CV',
+          type: 'cv',
+          fileUrl: cvFile,
+          source: 'resume_model'
+        });
+      }
+    });
+    
+    return items;
+  };
+
+  // Get Resume and CV items
+  const resumeCVItems = getResumeAndCVItems();
+
+  // Get specific items for the download buttons in hero
+  const getResumeFile = () => {
+    const items = getResumeAndCVItems();
+    return items.find(item => item.type === 'resume');
+  };
+
+  const getCVFile = () => {
+    const items = getResumeAndCVItems();
+    return items.find(item => item.type === 'cv');
+  };
+
+  const handleDownloadResume = async () => {
+    const resumeItem = getResumeFile();
+    if (!resumeItem) {
+      alert('Resume file not found.');
       return;
     }
 
     setDownloadingResume(true);
-    
     try {
-      for (const item of resumeItems) {
-        const fileUrl = getMediaUrl(item, 'certificate_image');
-        if (fileUrl) {
-          const fileExt = fileUrl.split('.').pop() || 'pdf';
-          const link = document.createElement('a');
-          link.href = fileUrl;
-          link.download = `Resume_${item.certificate_name || 'file'}.${fileExt}`;
-          link.target = '_blank';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+      const fileUrl = resumeItem.fileUrl;
+      if (fileUrl) {
+        const fileExt = fileUrl.split('.').pop() || 'pdf';
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = `Resume.${fileExt}`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
     } catch (error) {
-      console.error('Error downloading files:', error);
-      alert('Error downloading files. Please try again.');
+      console.error('Error downloading file:', error);
+      alert('Error downloading file. Please try again.');
     } finally {
       setDownloadingResume(false);
     }
   };
 
   const handleDownloadCV = async () => {
-    // Get CV items from certificates
-    const allCerts = portfolio.certificates || [];
-    
-    const cvItems = allCerts.filter(cert => {
-      const name = cert.certificate_name?.toLowerCase() || '';
-      const filePath = cert.certificate_image || '';
-      const fileName = filePath.split('/').pop()?.toLowerCase() || '';
-      const url = cert.certificate_image_url || '';
-      const urlFileName = url.split('/').pop()?.toLowerCase() || '';
-      
-      return name.includes('cv') || 
-             name.includes('curriculum vitae') ||
-             fileName.includes('cv') || 
-             urlFileName.includes('cv');
-    });
-    
-    if (cvItems.length === 0) {
-      alert('CV file not found. Please upload a CV in the admin panel.');
+    const cvItem = getCVFile();
+    if (!cvItem) {
+      alert('CV file not found.');
       return;
     }
 
     setDownloadingCV(true);
-    
     try {
-      for (const item of cvItems) {
-        const fileUrl = getMediaUrl(item, 'certificate_image');
-        if (fileUrl) {
-          const fileExt = fileUrl.split('.').pop() || 'pdf';
-          const link = document.createElement('a');
-          link.href = fileUrl;
-          link.download = `CV_${item.certificate_name || 'file'}.${fileExt}`;
-          link.target = '_blank';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+      const fileUrl = cvItem.fileUrl;
+      if (fileUrl) {
+        const fileExt = fileUrl.split('.').pop() || 'pdf';
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = `CV.${fileExt}`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
     } catch (error) {
-      console.error('Error downloading files:', error);
-      alert('Error downloading files. Please try again.');
+      console.error('Error downloading file:', error);
+      alert('Error downloading file. Please try again.');
     } finally {
       setDownloadingCV(false);
     }
@@ -574,16 +564,18 @@ const App1 = () => {
         })
       });
       
-      if (response.ok) {
-        setSubmitStatus('success');
-        setHireFormData({ name: '', email: '', message: '' });
-        setTimeout(() => {
-          setSubmitStatus(null);
-          setShowHireModal(false);
-        }, 2000);
-      } else {
-        setSubmitStatus('error');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to send email');
       }
+      
+      setSubmitStatus('success');
+      setHireFormData({ name: '', email: '', message: '' });
+      setTimeout(() => {
+        setSubmitStatus(null);
+        setShowHireModal(false);
+      }, 3000);
+      
     } catch (error) {
       console.error('Error sending message:', error);
       setSubmitStatus('error');
@@ -632,18 +624,15 @@ const App1 = () => {
     return portfolio.certificates?.filter(cert => {
       // Exclude certificates that are Resume or CV
       const name = cert.certificate_name?.toLowerCase() || '';
-      const filePath = cert.certificate_image || '';
+      const filePath = cert.cv || '';
       const fileName = filePath.split('/').pop()?.toLowerCase() || '';
-      const url = cert.certificate_image_url || '';
-      const urlFileName = url.split('/').pop()?.toLowerCase() || '';
       
-      const isResumeOrCV = name.includes('resume') || 
+      // Check if it's Resume (ID 27) or CV (ID 26)
+      const isResumeOrCV = cert.id === 27 || cert.id === 26 ||
+                          name.includes('resume') || 
                           name.includes('cv') || 
-                          name.includes('curriculum vitae') ||
                           fileName.includes('resume') || 
-                          fileName.includes('cv') ||
-                          urlFileName.includes('resume') || 
-                          urlFileName.includes('cv');
+                          fileName.includes('cv');
       
       return !isResumeOrCV;
     }) || [];
@@ -794,43 +783,6 @@ const App1 = () => {
 
   const projectCards = getProjectCards();
   const certificateCards = getCertificateCards();
-
-  // Get Resume and CV items from certificates (only those with files)
-  const allCerts = portfolio.certificates || [];
-  
-  const resumeItems = allCerts.filter(cert => {
-    const name = cert.certificate_name?.toLowerCase() || '';
-    const filePath = cert.certificate_image || '';
-    const fileName = filePath.split('/').pop()?.toLowerCase() || '';
-    const url = cert.certificate_image_url || '';
-    const urlFileName = url.split('/').pop()?.toLowerCase() || '';
-    
-    return (name.includes('resume') || 
-            fileName.includes('resume') || 
-            urlFileName.includes('resume')) &&
-            (cert.certificate_image || cert.certificate_image_url);
-  });
-
-  const cvItems = allCerts.filter(cert => {
-    const name = cert.certificate_name?.toLowerCase() || '';
-    const filePath = cert.certificate_image || '';
-    const fileName = filePath.split('/').pop()?.toLowerCase() || '';
-    const url = cert.certificate_image_url || '';
-    const urlFileName = url.split('/').pop()?.toLowerCase() || '';
-    
-    return (name.includes('cv') || 
-            name.includes('curriculum vitae') ||
-            fileName.includes('cv') || 
-            urlFileName.includes('cv')) &&
-            (cert.certificate_image || cert.certificate_image_url);
-  });
-
-  // Remove duplicates
-  const uniqueCVItems = cvItems.filter(cv => 
-    !resumeItems.some(resume => resume.id === cv.id)
-  );
-
-  const resumeCVItems = [...resumeItems, ...uniqueCVItems];
 
   return (
     <div className="bg-white">
@@ -1170,48 +1122,38 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Resume Section - Shows only Resume and CV */}
+      {/* Resume Section - Shows from both models */}
       {resumeCVItems.length > 0 && (
         <section ref={sectionRefs.resume} id="resume" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Resume & CV</h2>
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {resumeCVItems.map((item, index) => {
-                const isResume = item.certificate_name?.toLowerCase().includes('resume') ||
-                                (item.certificate_image || '').toLowerCase().includes('resume');
-                const fileUrl = getMediaUrl(item, 'certificate_image');
-                const fileName = item.certificate_name || 'file';
-                const fileExt = fileUrl ? fileUrl.split('.').pop() || 'pdf' : 'pdf';
-                
-                return (
-                  <div key={index} className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">{item.certificate_name}</h3>
-                    {fileUrl && (
-                      <a 
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex items-center space-x-2 transition ${isResume ? 'text-blue-600 hover:text-blue-800' : 'text-green-600 hover:text-green-800'}`}
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <span>Download {isResume ? 'Resume' : 'CV'}</span>
-                      </a>
+              {resumeCVItems.map((item, index) => (
+                <div key={index} className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    {item.name}
+                    {item.certId === 27 && (
+                      <span className="text-xs text-blue-600 ml-2">⭐ Resume</span>
                     )}
-                    {item.certificate_link && (
-                      <a 
-                        href={item.certificate_link} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="inline-block mt-3 text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
-                      >
-                        View Certificate →
-                      </a>
+                    {item.certId === 26 && (
+                      <span className="text-xs text-green-600 ml-2">📄 CV</span>
                     )}
-                  </div>
-                );
-              })}
+                  </h3>
+                  {item.fileUrl && (
+                    <a 
+                      href={item.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex items-center space-x-2 transition ${item.type === 'resume' ? 'text-blue-600 hover:text-blue-800' : 'text-green-600 hover:text-green-800'}`}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>Download {item.type === 'resume' ? 'Resume' : 'CV'}</span>
+                    </a>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </section>
