@@ -774,9 +774,9 @@ const App1 = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section - Reduced padding */}
       <section ref={sectionRefs.home} id="home" className="relative">
-        <div className="w-full h-[200px] md:h-[280px] lg:h-[320px] overflow-hidden bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 cursor-pointer">
+        <div className="w-full h-[180px] md:h-[240px] lg:h-[280px] overflow-hidden bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 cursor-pointer">
           {portfolio.introduction?.imagebackground && (
             <img
               src={getMediaUrl(portfolio.introduction, 'imagebackground')}
@@ -791,9 +791,9 @@ const App1 = () => {
         </div>
         
         <div className="container mx-auto px-6 relative">
-          <div className="flex flex-col md:flex-row md:items-end -mt-16 md:-mt-20">
+          <div className="flex flex-col md:flex-row md:items-end -mt-12 md:-mt-16">
             <div className="flex justify-center md:justify-start">
-              <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white bg-white/50 backdrop-blur-sm shadow-xl overflow-hidden cursor-pointer group">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full border-4 border-white bg-white/50 backdrop-blur-sm shadow-xl overflow-hidden cursor-pointer group">
                 {portfolio.introduction?.image && (
                   <img
                     src={getMediaUrl(portfolio.introduction, 'image')}
@@ -810,7 +810,7 @@ const App1 = () => {
               </div>
             </div>
             
-            <div className="md:ml-6 mt-3 md:mt-0 text-center md:text-left flex-1">
+            <div className="md:ml-6 mt-2 md:mt-0 text-center md:text-left flex-1">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
                 {portfolio.introduction?.name || 'Kirubel Moges'}
               </h1>
@@ -821,24 +821,24 @@ const App1 = () => {
                 <p className="text-sm text-gray-500 mt-1">{portfolio.introduction.role}</p>
               )}
               
-              <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
+              <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
                 <button 
                   onClick={() => setShowHireModal(true)}
-                  className="px-6 py-2 bg-gray-800 text-white rounded-full hover:bg-gray-900 shadow-lg transition-all duration-300 transform hover:scale-105 text-sm font-medium"
+                  className="px-5 py-1.5 bg-gray-800 text-white rounded-full hover:bg-gray-900 shadow-lg transition-all duration-300 transform hover:scale-105 text-sm font-medium"
                 >
                   Hire Me
                 </button>
                 <button 
                   onClick={handleDownloadResume}
                   disabled={downloadingResume}
-                  className="px-6 py-2 border-2 border-blue-600 text-blue-600 rounded-full hover:bg-blue-50 transition-all duration-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-1.5 border-2 border-blue-600 text-blue-600 rounded-full hover:bg-blue-50 transition-all duration-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {downloadingResume ? 'Downloading...' : 'Download Resume'}
                 </button>
                 <button 
                   onClick={handleDownloadCV}
                   disabled={downloadingCV}
-                  className="px-6 py-2 border-2 border-green-600 text-green-600 rounded-full hover:bg-green-50 transition-all duration-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-1.5 border-2 border-green-600 text-green-600 rounded-full hover:bg-green-50 transition-all duration-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {downloadingCV ? 'Downloading...' : 'Download CV'}
                 </button>
@@ -848,12 +848,12 @@ const App1 = () => {
         </div>
       </section>
 
-      {/* About Section */}
+      {/* About Section - Reduced padding */}
       {portfolio.introduction?.about_me && (
-        <section ref={sectionRefs.about} id="about" className="py-16 bg-white/50 backdrop-blur-sm">
+        <section ref={sectionRefs.about} id="about" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">About Me</h2>
-            <div className="max-w-3xl mx-auto bg-white/50 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-gray-200">
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">About Me</h2>
+            <div className="max-w-3xl mx-auto bg-white/50 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-200">
               <div className="relative group">
                 <p className="text-gray-700 text-lg leading-relaxed line-clamp-4 group-hover:line-clamp-none transition-all duration-500">
                   {portfolio.introduction.about_me}
@@ -869,12 +869,12 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Skills Section */}
+      {/* Skills Section - Reduced padding */}
       {portfolio.skills?.length > 0 && portfolio.skills[0] && (
-        <section ref={sectionRefs.skills} id="skills" className="py-16 bg-white/50 backdrop-blur-sm">
+        <section ref={sectionRefs.skills} id="skills" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Technical Skills</h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Technical Skills</h2>
+            <div className="grid md:grid-cols-3 gap-6">
               <SkillCard title="Languages" skills={portfolio.skills[0].language} icon="💻" />
               <SkillCard title="Frameworks" skills={portfolio.skills[0].framework} icon="🚀" />
               <SkillCard title="Tools" skills={portfolio.skills[0].tools} icon="🛠️" />
@@ -883,116 +883,99 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section */}
-{portfolio.projects?.length > 0 && (
-  <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm overflow-hidden">
-    <div className="container mx-auto px-4">
-      <h2 className="text-3xl font-bold text-center mb-10 text-gray-900">Featured Projects</h2>
-      
-      {/* Wrapper for Slider and Absolute Arrows */}
-      <div className="relative max-w-6xl mx-auto">
-        
-        {/* LEFT NAVIGATION ARROW */}
-        <button 
-          onClick={() => goToPrev('projects')} 
-          className="absolute left-[-10px] md:left-[-20px] top-1/2 -translate-y-1/2 z-[110] p-3 bg-white/90 shadow-xl rounded-full hover:bg-blue-600 hover:text-white transition-all border border-gray-100 group"
-          aria-label="Previous Project"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M15 19l-7-7 7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+      {/* Projects Section - Reduced padding */}
+      {portfolio.projects?.length > 0 && (
+        <section ref={sectionRefs.projects} id="projects" className="py-10 bg-white/50 backdrop-blur-sm overflow-hidden">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-6 text-gray-900">Featured Projects</h2>
+            
+            {/* Navigation Arrows */}
+            <div className="relative max-w-6xl mx-auto">
+              <button 
+                onClick={() => goToPrev('projects')} 
+                className="absolute left-[-10px] md:left-[-20px] top-1/2 -translate-y-1/2 z-[110] p-3 bg-white/90 shadow-xl rounded-full hover:bg-blue-600 hover:text-white transition-all border border-gray-100 group"
+                aria-label="Previous Project"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M15 19l-7-7 7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
 
-        {/* RIGHT NAVIGATION ARROW */}
-        <button 
-          onClick={() => goToNext('projects')} 
-          className="absolute right-[-10px] md:right-[-20px] top-1/2 -translate-y-1/2 z-[110] p-3 bg-white/90 shadow-xl rounded-full hover:bg-blue-600 hover:text-white transition-all border border-gray-100 group"
-          aria-label="Next Project"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M9 5l7 7-7 7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+              <button 
+                onClick={() => goToNext('projects')} 
+                className="absolute right-[-10px] md:right-[-20px] top-1/2 -translate-y-1/2 z-[110] p-3 bg-white/90 shadow-xl rounded-full hover:bg-blue-600 hover:text-white transition-all border border-gray-100 group"
+                aria-label="Next Project"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 5l7 7-7 7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
 
-        {/* PROJECT SLIDER CONTENT */}
-        <div className="relative w-full">
-          {isMobile ? (
-            /* MOBILE: Pinned-edge horizontal layout */
-            <div className="flex justify-center items-center relative py-5 h-[420px]">
-              <div className="w-[75%] max-w-[300px] relative z-20">
-                <ProjectCard item={projectCards.center} isCenter={true} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
-                
-                {/* Left Side (Touching) */}
-                {projectCards.left && (
-                  <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
-                    <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[1px] translate-x-[1px]">
-                      <ProjectCard item={projectCards.left} isCenter={false} getMediaUrl={getMediaUrl} />
+              <div className="relative w-full">
+                {isMobile ? (
+                  <div className="flex justify-center items-center relative py-4 h-[380px]">
+                    <div className="w-[75%] max-w-[300px] relative z-20">
+                      <ProjectCard item={projectCards.center} isCenter={true} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
+                      
+                      {projectCards.left && (
+                        <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
+                          <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[1px] translate-x-[1px]">
+                            <ProjectCard item={projectCards.left} isCenter={false} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
+                          </div>
+                        </div>
+                      )}
+
+                      {projectCards.right && (
+                        <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
+                          <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[1px] -translate-x-[1px]">
+                            <ProjectCard item={projectCards.right} isCenter={false} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
-
-                {/* Right Side (Touching) */}
-                {projectCards.right && (
-                  <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
-                    <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[1px] -translate-x-[1px]">
-                      <ProjectCard item={projectCards.right} isCenter={false} getMediaUrl={getMediaUrl} />
-                    </div>
+                ) : (
+                  <div className="flex gap-4 overflow-visible pb-4 justify-center items-start h-[480px]">
+                    {projectCards.map((p, idx) => (
+                      <div 
+                        key={idx}
+                        className="flex-shrink-0 transition-all duration-500"
+                        style={{
+                          width: p.isCenter ? '320px' : '260px',
+                          transform: `scale(${p.scale}) translateY(${p.translateY}px)`,
+                          opacity: p.opacity,
+                          zIndex: p.zIndex,
+                          filter: p.blur,
+                          pointerEvents: p.isCenter ? 'auto' : 'none'
+                        }}
+                      >
+                        <ProjectCard item={p} isCenter={p.isCenter} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
             </div>
-          ) : (
-            /* DESKTOP: Pyramid Effect */
-            <div className="flex gap-4 overflow-visible pb-6 justify-center items-start h-[520px]">
-              {projectCards.map((p, idx) => (
-                <div 
+
+            {/* Pagination Dots */}
+            <div className="flex justify-center gap-2 mt-3">
+              {portfolio.projects.map((_, idx) => (
+                <button
                   key={idx}
-                  className="flex-shrink-0 transition-all duration-500"
-                  style={{
-                    width: p.isCenter ? '320px' : '260px',
-                    transform: `scale(${p.scale}) translateY(${p.translateY}px)`,
-                    opacity: p.opacity,
-                    zIndex: p.zIndex,
-                    filter: p.blur,
-                    pointerEvents: p.isCenter ? 'auto' : 'none'
-                  }}
-                >
-                  <ProjectCard item={p} isCenter={p.isCenter} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
-                </div>
+                  onClick={() => setProjectIndex(idx)}
+                  className={`w-2 h-2 rounded-full transition-all ${idx === projectIndex ? 'bg-blue-600 w-6' : 'bg-gray-300'}`}
+                />
               ))}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </section>
+      )}
 
-      {/* Optional: Pagination Dots (Matches certificates) */}
-      <div className="flex justify-center gap-2 mt-4">
-        {portfolio.projects.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => setProjectIndex(idx)}
-            className={`w-2 h-2 rounded-full transition-all ${idx === projectIndex ? 'bg-blue-600 w-6' : 'bg-gray-300'}`}
-          />
-        ))}
-      </div>
-
-    </div>
-  </section>
-)}
-                  
-
-
-
-
-
-
-
-
-      {/* Experience Section */}
+      {/* Experience Section - Reduced padding */}
       {portfolio.experience?.length > 0 && (
-        <section ref={sectionRefs.experience} id="experience" className="py-16 bg-white/50 backdrop-blur-sm">
+        <section ref={sectionRefs.experience} id="experience" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Work Experience</h2>
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Work Experience</h2>
             <div className="max-w-4xl mx-auto">
               {portfolio.experience.map((exp, index) => (
                 <ExperienceCard key={index} experience={exp} />
@@ -1002,88 +985,78 @@ const App1 = () => {
         </section>
       )}
 
-     
+      {/* Certificates Section - Reduced padding */}
+      {filteredCertificates.length > 0 && (
+        <section ref={sectionRefs.certificates} id="certificates" className="py-10 bg-white/50 backdrop-blur-sm overflow-hidden">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Certificates</h2>
+            
+            <div className="relative z-[100] flex justify-center gap-4 mb-6">
+              <button onClick={() => goToPrev('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 border border-gray-200">
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <button onClick={() => goToNext('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 border border-gray-200">
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
 
+            <div className="relative w-full">
+              {isMobile ? (
+                <div className="flex justify-center items-center relative py-4 h-[300px]">
+                  <div className="w-[70%] max-w-[260px] relative z-20">
+                    <CertificateCard cert={certificateCards.center} isCenter={true} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
+                    
+                    {certificateCards.left && (
+                      <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
+                        <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[1px] translate-x-[1px]">
+                          <CertificateCard cert={certificateCards.left} isCenter={false} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
+                        </div>
+                      </div>
+                    )}
 
-     {/* Certificates Section */}
-{filteredCertificates.length > 0 && (
-  <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm overflow-hidden">
-    <div className="container mx-auto px-4">
-      <h2 className="text-3xl font-bold text-center mb-6 text-gray-900">Certificates</h2>
-      
-      <div className="relative z-[100] flex justify-center gap-4 mb-8">
-        <button onClick={() => goToPrev('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 border border-gray-200">
-          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
-        <button onClick={() => goToNext('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 border border-gray-200">
-          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
-      </div>
-
-      <div className="relative w-full">
-        {isMobile ? (
-          <div className="flex justify-center items-center relative py-5 h-[320px]">
-            <div className="w-[70%] max-w-[260px] relative z-20">
-              <CertificateCard cert={certificateCards.center} isCenter={true} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
-              
-              {/* Left Card */}
-              {certificateCards.left && (
-                <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
-                  <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[1px] translate-x-[1px]">
-                    <CertificateCard cert={certificateCards.left} isCenter={false} getMediaUrl={getMediaUrl} />
+                    {certificateCards.right && (
+                      <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
+                        <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[1px] -translate-x-[1px]">
+                          <CertificateCard cert={certificateCards.right} isCenter={false} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-
-              {/* Right Card */}
-              {certificateCards.right && (
-                <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
-                  <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[1px] -translate-x-[1px]">
-                    <CertificateCard cert={certificateCards.right} isCenter={false} getMediaUrl={getMediaUrl} />
-                  </div>
+              ) : (
+                <div className="flex gap-4 overflow-visible pb-4 justify-center items-start h-[360px]">
+                  {certificateCards.map((c, idx) => (
+                    <div 
+                      key={idx}
+                      className="flex-shrink-0 transition-all duration-500"
+                      style={{
+                        width: c.isCenter ? '280px' : '220px',
+                        transform: `scale(${c.scale}) translateY(${c.translateY}px)`,
+                        opacity: c.opacity,
+                        zIndex: c.zIndex,
+                        filter: c.blur
+                      }}
+                    >
+                      <CertificateCard cert={c} isCenter={c.isCenter} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
           </div>
-        ) : (
-          <div className="flex gap-4 overflow-visible pb-6 justify-center items-start h-[400px]">
-            {certificateCards.map((c, idx) => (
-              <div 
-                key={idx}
-                className="flex-shrink-0 transition-all duration-500"
-                style={{
-                  width: c.isCenter ? '280px' : '220px',
-                  transform: `scale(${c.scale}) translateY(${c.translateY}px)`,
-                  opacity: c.opacity,
-                  zIndex: c.zIndex,
-                  filter: c.blur
-                }}
-              >
-                <CertificateCard cert={c} isCenter={c.isCenter} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  </section>
-)}
+        </section>
+      )}
 
-
-
-
-
-
-      {/* Resume Section */}
+      {/* Resume Section - Reduced padding */}
       {portfolio.resume && portfolio.resume.length > 0 && (
-        <section ref={sectionRefs.resume} id="resume" className="py-16 bg-white/50 backdrop-blur-sm">
+        <section ref={sectionRefs.resume} id="resume" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Resume & CV</h2>
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Resume & CV</h2>
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {portfolio.resume.map((item, index) => (
-                <div key={index} className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-300">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">{item.resume_name}</h3>
-                  <div className="space-y-3">
+                <div key={index} className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.resume_name}</h3>
+                  <div className="space-y-2">
                     {(item.resume_file || item.resume_file_url) && (
                       <a 
                         href={getMediaUrl(item, 'resume_file')}
@@ -1118,11 +1091,11 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Education Section */}
+      {/* Education Section - Reduced padding */}
       {portfolio.education?.length > 0 && (
-        <section ref={sectionRefs.education} id="education" className="py-16 bg-white/50 backdrop-blur-sm">
+        <section ref={sectionRefs.education} id="education" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Education</h2>
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Education</h2>
             <div className="max-w-3xl mx-auto">
               {portfolio.education.map((edu, index) => (
                 <EducationCard key={index} education={edu} />
@@ -1132,12 +1105,12 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Articles Section */}
+      {/* Articles Section - Reduced padding */}
       {portfolio.articles?.length > 0 && (
-        <section ref={sectionRefs.articles} id="articles" className="py-16 bg-white/50 backdrop-blur-sm">
+        <section ref={sectionRefs.articles} id="articles" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Articles</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Articles</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {portfolio.articles.map((article, index) => (
                 <ArticleCard key={index} article={article} />
               ))}
@@ -1146,14 +1119,14 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Contact Section */}
+      {/* Contact Section - Reduced padding */}
       {portfolio.contact && (
-        <section ref={sectionRefs.contact} id="contact" className="py-16 bg-white/50 backdrop-blur-sm">
+        <section ref={sectionRefs.contact} id="contact" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Get In Touch</h2>
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Get In Touch</h2>
             <div className="max-w-4xl mx-auto">
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <ContactItem icon="📧" label="Email" value={portfolio.contact.email} link={`mailto:${portfolio.contact.email}`} />
                   <ContactItem icon="🔗" label="LinkedIn" value={portfolio.contact.linkedin} link={portfolio.contact.linkedin} />
                   <ContactItem icon="🐙" label="GitHub" value={portfolio.contact.github} link={portfolio.contact.github} />
@@ -1168,16 +1141,16 @@ const App1 = () => {
 
       {/* Footer */}
       {portfolio.last && (
-        <footer className="py-8 bg-gray-900 text-white">
+        <footer className="py-6 bg-gray-900 text-white">
           <div className="container mx-auto px-6 text-center">
-            <div className="flex justify-center space-x-6 mb-4">
+            <div className="flex justify-center space-x-6 mb-3">
               {portfolio.last.logo_social_links?.split(',').map((link, index) => (
                 <a key={index} href={link.trim()} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition text-2xl">
                   🔗
                 </a>
               ))}
             </div>
-            <p className="text-gray-400">{portfolio.last.copyright}</p>
+            <p className="text-gray-400 text-sm">{portfolio.last.copyright}</p>
           </div>
         </footer>
       )}
@@ -1333,9 +1306,9 @@ const SkillCard = ({ title, skills, icon }) => {
   const skillsList = skills ? skills.split(',').map(s => s.trim()) : [];
 
   return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 hover:shadow-lg transition-all duration-300 border border-gray-200">
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">{title}</h3>
+    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-5 hover:shadow-lg transition-all duration-300 border border-gray-200">
+      <div className="text-3xl mb-3">{icon}</div>
+      <h3 className="text-xl font-semibold mb-3 text-gray-800">{title}</h3>
       <div className="flex flex-wrap gap-2">
         {skillsList.map((skill, index) => (
           <span key={index} className="px-3 py-1 bg-gray-200/70 text-gray-800 rounded-full text-sm hover:bg-blue-100 hover:text-blue-700 transition-all duration-300">
@@ -1352,10 +1325,10 @@ const ExperienceCard = ({ experience }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="relative pl-8 pb-8 border-l-2 border-gray-400">
+    <div className="relative pl-8 pb-6 border-l-2 border-gray-400">
       <div className="absolute w-4 h-4 bg-gray-700 rounded-full -left-[9px] top-0"></div>
       <div 
-        className="bg-white/50 backdrop-blur-sm rounded-lg p-6 ml-4 hover:shadow-xl transition-all duration-300 border border-gray-200"
+        className="bg-white/50 backdrop-blur-sm rounded-lg p-5 ml-4 hover:shadow-xl transition-all duration-300 border border-gray-200"
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
       >
@@ -1383,16 +1356,16 @@ const EducationCard = ({ education }) => {
 
   return (
     <div 
-      className="bg-white/50 backdrop-blur-sm rounded-xl p-8 mb-6 shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200"
+      className="bg-white/50 backdrop-blur-sm rounded-xl p-6 mb-4 shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200"
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
     >
-      <h3 className="text-2xl font-bold text-gray-800 mb-2">{education.attended_university}</h3>
-      <p className="text-gray-700 mb-2">{education.attended_college}</p>
+      <h3 className="text-2xl font-bold text-gray-800 mb-1">{education.attended_university}</h3>
+      <p className="text-gray-700 mb-1">{education.attended_college}</p>
       {education.pursuing_degree && <p className="text-gray-700 mb-2">🎓 {education.pursuing_degree}</p>}
       {education.relevant_courses && (
-        <div className="mt-4">
-          <p className="text-gray-700 font-semibold mb-2">Relevant Courses:</p>
+        <div className="mt-3">
+          <p className="text-gray-700 font-semibold mb-1">Relevant Courses:</p>
           <p className={`text-gray-600 transition-all duration-300 ${
             isExpanded ? 'line-clamp-none' : 'line-clamp-2'
           }`}>
@@ -1417,18 +1390,18 @@ const ArticleCard = ({ article }) => {
 
   return (
     <div 
-      className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-300"
+      className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300"
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
     >
       <h3 className="text-xl font-bold text-gray-900 mb-2">{article.article_title}</h3>
-      <p className={`text-gray-600 mb-4 transition-all duration-300 ${
+      <p className={`text-gray-600 mb-3 transition-all duration-300 ${
         isExpanded ? 'line-clamp-none' : 'line-clamp-3'
       }`}>
         {article.description}
       </p>
       {article.description && article.description.length > 100 && (
-        <span className={`text-gray-400 text-sm block -mt-2 mb-2 transition-opacity duration-300 ${
+        <span className={`text-gray-400 text-sm block -mt-1 mb-2 transition-opacity duration-300 ${
           isExpanded ? 'opacity-0' : 'opacity-100'
         }`}>
           hover to expand
@@ -1450,8 +1423,8 @@ const ArticleCard = ({ article }) => {
 
 // Contact Item Component
 const ContactItem = ({ icon, label, value, link }) => (
-  <div className="flex items-center space-x-4 bg-white/50 backdrop-blur-sm rounded-lg p-4 hover:shadow-md transition-all duration-300 border border-gray-200">
-    <div className="text-3xl">{icon}</div>
+  <div className="flex items-center space-x-4 bg-white/50 backdrop-blur-sm rounded-lg p-3 hover:shadow-md transition-all duration-300 border border-gray-200">
+    <div className="text-2xl">{icon}</div>
     <div>
       <p className="text-gray-500 text-sm">{label}</p>
       {link ? (
@@ -1501,11 +1474,11 @@ const ContactForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <input
         type="text"
         placeholder="Your Name"
-        className="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
+        className="w-full px-4 py-2.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         required
@@ -1513,15 +1486,15 @@ const ContactForm = () => {
       <input
         type="email"
         placeholder="Your Email"
-        className="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
+        className="w-full px-4 py-2.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
         value={formData.email}
         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         required
       />
       <textarea
         placeholder="Your Message"
-        rows="4"
-        className="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
+        rows="3"
+        className="w-full px-4 py-2.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
         value={formData.message}
         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
         required
@@ -1542,7 +1515,7 @@ const ContactForm = () => {
       <button 
         type="submit" 
         disabled={isSubmitting}
-        className="w-full px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-6 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting ? 'Sending...' : 'Send Message'}
       </button>
