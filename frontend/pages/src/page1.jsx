@@ -459,7 +459,7 @@ const App1 = () => {
           </div>
         )}
         <div className="p-6">
-          <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'}`}>
+          <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2`}>
             {item.project_title}
           </h3>
           <p className="text-gray-600 mb-4 line-clamp-3">{item.description}</p>
@@ -522,7 +522,7 @@ const App1 = () => {
           </div>
         )}
         <div className="p-6 pt-0">
-          <h3 className={`text-lg font-bold mb-1 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'}`}>
+          <h3 className={`text-lg font-bold mb-1 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2`}>
             {cert.certificate_name}
           </h3>
           {cert.certificate_link && (
@@ -750,8 +750,8 @@ const App1 = () => {
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900">Featured Projects</h2>
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Featured Projects</h2>
+            <div className="flex justify-center items-center mb-6">
               {portfolio.projects.length > 1 && (
                 <div className="flex gap-2">
                   <button 
@@ -789,14 +789,14 @@ const App1 = () => {
               onMouseLeave={() => setIsPaused(false)}
             >
               {portfolio.projects.length === 1 ? (
-                <div className="min-w-[280px] md:min-w-[380px] max-w-[380px] flex-shrink-0">
+                <div className="min-w-[280px] md:min-w-[340px] max-w-[340px] flex-shrink-0">
                   {renderProjectCard(portfolio.projects[0], true)}
                 </div>
               ) : (
                 visibleProjects.map((project, idx) => (
                   <div 
                     key={idx} 
-                    className={`min-w-[280px] md:min-w-[320px] lg:min-w-[360px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
+                    className={`min-w-[260px] md:min-w-[300px] lg:min-w-[340px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
                       project.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
                     }`}
                     style={{
@@ -846,8 +846,8 @@ const App1 = () => {
       {visibleCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900">Certificates</h2>
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Certificates</h2>
+            <div className="flex justify-center items-center mb-6">
               {visibleCertificates.length > 1 && (
                 <div className="flex gap-2">
                   <button 
@@ -885,14 +885,14 @@ const App1 = () => {
               onMouseLeave={() => setIsPaused(false)}
             >
               {visibleCertificates.length === 1 ? (
-                <div className="min-w-[280px] md:min-w-[340px] max-w-[340px] flex-shrink-0">
+                <div className="min-w-[240px] md:min-w-[300px] max-w-[300px] flex-shrink-0">
                   {renderCertificateCard(visibleCertificates[0], true)}
                 </div>
               ) : (
                 visibleCertificates.map((cert, idx) => (
                   <div 
                     key={idx} 
-                    className={`min-w-[240px] md:min-w-[280px] lg:min-w-[320px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
+                    className={`min-w-[220px] md:min-w-[260px] lg:min-w-[300px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out ${
                       cert.isCenter ? 'transform scale-105 z-20' : 'transform scale-95 opacity-80'
                     }`}
                     style={{
