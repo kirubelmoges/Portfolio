@@ -1069,8 +1069,8 @@ const App1 = () => {
                     
                     {/* Left Card - Pinned to left edge of center */}
                     {certificateCards.left && (
-                      <div className="top-0 ">
-                        <div className="transform scale-90 origin-right opacity-40 blur-[2px]">
+                      <div className=" ">
+                        <div className="">
                           <CertificateCard 
                             cert={certificateCards.left}
                             isCenter={false}
@@ -1085,7 +1085,7 @@ const App1 = () => {
                     {/* Right Card - Pinned to right edge of center */}
                     {certificateCards.right && (
                       <div className=" top-0 ">
-                        <div className="transform scale-90 origin-left opacity-40 blur-[2px]">
+                        <div className="">
                           <CertificateCard 
                             cert={certificateCards.right}
                             isCenter={false}
