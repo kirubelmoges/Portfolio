@@ -1,8 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import emailjs from '@emailjs/browser';
 
 const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
 const MEDIA_URL = 'https://portfolio-backend-ee1z.onrender.com';
+
+// ============================================================
+// HARDCODED RESUME & CV LINKS (from Cloudinary)
+// ============================================================
+const RESUME_URL = 'https://res.cloudinary.com/dpkr7arkl/raw/upload/v1/4a0117365d898ff6683bbc9937a21253'; // Resume
+const CV_URL = 'https://res.cloudinary.com/dpkr7arkl/raw/upload/v1/e286995bf9d70414a96d874bcdc6671b'; // CV
+
+// ============================================================
+// EMAILJS CONFIGURATION - ALL CREDENTIALS SET
+// ============================================================
+const EMAILJS_SERVICE_ID = 'service_vyh9ewj';
+const EMAILJS_TEMPLATE_ID = 'template_0nd5h2r';
+const EMAILJS_PUBLIC_KEY = 'HyWhBsjTEX4w85hEs';
+
+// Fallback email
+const CONTACT_EMAIL = 'primeforthekms@gmail.com';
 
 // Project Card Component
 const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoClick, getMediaUrl }) => {
@@ -366,24 +383,13 @@ const App1 = () => {
     return `${MEDIA_URL}/media/${filePath}`;
   };
 
-  // Get the Cloudinary Resume entry (the one with resume_file_url)
-  const getCloudinaryResumeEntry = () => {
-    const resumeData = portfolio.resume || [];
-    // Find the entry that has resume_file_url (Cloudinary URL)
-    return resumeData.find(item => item.resume_file_url && item.resume_file_url.includes('cloudinary'));
-  };
-
+  // ============================================================
+  // HARDCODED RESUME & CV HANDLERS
+  // ============================================================
   const handleDownloadResume = () => {
-    const entry = getCloudinaryResumeEntry();
-    if (!entry || !entry.resume_file_url) {
-      alert('Resume file not found in Cloudinary.');
-      return;
-    }
-    
     setDownloadingResume(true);
     try {
-      // Open in new tab
-      window.open(entry.resume_file_url, '_blank');
+      window.open(RESUME_URL, '_blank');
     } catch (error) {
       console.error('Error opening resume:', error);
       alert('Error opening file. Please try again.');
@@ -393,21 +399,71 @@ const App1 = () => {
   };
 
   const handleDownloadCV = () => {
-    const entry = getCloudinaryResumeEntry();
-    if (!entry || !entry.cv_file_url) {
-      alert('CV file not found in Cloudinary.');
-      return;
-    }
-    
     setDownloadingCV(true);
     try {
-      // Open in new tab
-      window.open(entry.cv_file_url, '_blank');
+      window.open(CV_URL, '_blank');
     } catch (error) {
       console.error('Error opening CV:', error);
       alert('Error opening file. Please try again.');
     } finally {
       setDownloadingCV(false);
+    }
+  };
+
+  // ============================================================
+  // EMAIL HANDLER - Using EmailJS with fallback
+  // ============================================================
+  const handleHireSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+    
+    try {
+      // Try EmailJS
+      const templateParams = {
+        from_name: hireFormData.name,
+        from_email: hireFormData.email,
+        message: hireFormData.message,
+        to_email: CONTACT_EMAIL,
+      };
+      
+      console.log('Sending email with params:', templateParams);
+      
+      const response = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams,
+        EMAILJS_PUBLIC_KEY
+      );
+      
+      console.log('EmailJS Response:', response);
+      
+      if (response.status === 200) {
+        setSubmitStatus('success');
+        setHireFormData({ name: '', email: '', message: '' });
+        setTimeout(() => {
+          setSubmitStatus(null);
+          setShowHireModal(false);
+        }, 3000);
+        return;
+      } else {
+        throw new Error('Email sending failed');
+      }
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      // Fallback: Use mailto
+      const mailtoLink = `mailto:${CONTACT_EMAIL}?subject=New Hire Request from ${hireFormData.name}&body=Name: ${hireFormData.name}%0D%0AEmail: ${hireFormData.email}%0D%0A%0D%0AMessage:%0D%0A${hireFormData.message}`;
+      window.open(mailtoLink, '_blank');
+      setSubmitStatus('success');
+      setHireFormData({ name: '', email: '', message: '' });
+      setTimeout(() => {
+        setSubmitStatus(null);
+        setShowHireModal(false);
+      }, 3000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -437,43 +493,6 @@ const App1 = () => {
   const closeVideoFullscreen = () => {
     setFullscreenVideo(null);
     document.body.style.overflow = 'auto';
-  };
-
-  const handleHireSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus(null);
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/send-hire-email/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...hireFormData,
-          subject: 'New Hire Request from Portfolio'
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to send email');
-      }
-      
-      setSubmitStatus('success');
-      setHireFormData({ name: '', email: '', message: '' });
-      setTimeout(() => {
-        setSubmitStatus(null);
-        setShowHireModal(false);
-      }, 3000);
-      
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setSubmitStatus('error');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   // Carousel navigation
@@ -514,7 +533,6 @@ const App1 = () => {
 
   const getFilteredCertificates = () => {
     return portfolio.certificates?.filter(cert => {
-      // Exclude certificates that are Resume or CV (ID 26 and 27)
       const isResumeOrCV = cert.id === 27 || cert.id === 26;
       return !isResumeOrCV;
     }) || [];
@@ -665,9 +683,6 @@ const App1 = () => {
 
   const projectCards = getProjectCards();
   const certificateCards = getCertificateCards();
-
-  // Get Cloudinary Resume entry
-  const cloudinaryEntry = getCloudinaryResumeEntry();
 
   return (
     <div className="bg-white">
@@ -945,7 +960,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section - Excludes Resume and CV */}
+      {/* Certificates Section */}
       {filteredCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-10 bg-white/50 backdrop-blur-sm overflow-hidden">
           <div className="container mx-auto px-4">
@@ -1007,65 +1022,59 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Resume Section - Shows the Cloudinary Resume entry */}
-      {cloudinaryEntry && (
-        <section ref={sectionRefs.resume} id="resume" className="py-10 bg-white/50 backdrop-blur-sm">
-          <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Resume & CV</h2>
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {/* Resume Card */}
-              {cloudinaryEntry.resume_file_url && (
-                <div className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    {cloudinaryEntry.resume_name || 'Resume'}
-                    <span className="text-xs text-blue-600 ml-2">📄 Resume</span>
-                  </h3>
-                  <a 
-                    href={cloudinaryEntry.resume_file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.open(cloudinaryEntry.resume_file_url, '_blank');
-                    }}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span>View Resume</span>
-                  </a>
-                </div>
-              )}
-              
-              {/* CV Card */}
-              {cloudinaryEntry.cv_file_url && (
-                <div className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    {cloudinaryEntry.resume_name || 'CV'}
-                    <span className="text-xs text-green-600 ml-2">📄 CV</span>
-                  </h3>
-                  <a 
-                    href={cloudinaryEntry.cv_file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 text-green-600 hover:text-green-800 transition"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.open(cloudinaryEntry.cv_file_url, '_blank');
-                    }}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span>View CV</span>
-                  </a>
-                </div>
-              )}
+      {/* Resume Section - Using Hardcoded Links */}
+      <section ref={sectionRefs.resume} id="resume" className="py-10 bg-white/50 backdrop-blur-sm">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Resume & CV</h2>
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* Resume Card */}
+            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                Resume
+                <span className="text-xs text-blue-600 ml-2">📄 Resume</span>
+              </h3>
+              <a 
+                href={RESUME_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open(RESUME_URL, '_blank');
+                }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>View Resume</span>
+              </a>
+            </div>
+            
+            {/* CV Card */}
+            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                CV
+                <span className="text-xs text-green-600 ml-2">📄 CV</span>
+              </h3>
+              <a 
+                href={CV_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-green-600 hover:text-green-800 transition"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open(CV_URL, '_blank');
+                }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>View CV</span>
+              </a>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Education Section */}
       {portfolio.education?.length > 0 && (
@@ -1095,7 +1104,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Contact Section */}
+      {/* Contact Section - With EmailJS integration */}
       {portfolio.contact && (
         <section ref={sectionRefs.contact} id="contact" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -1108,7 +1117,54 @@ const App1 = () => {
                   <ContactItem icon="🐙" label="GitHub" value={portfolio.contact.github} link={portfolio.contact.github} />
                   <ContactItem icon="📱" label="Phone" value={portfolio.contact.phone} link={`tel:${portfolio.contact.phone}`} />
                 </div>
-                <ContactForm />
+                <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200">
+                  <form onSubmit={handleHireSubmit} className="space-y-4">
+                    <input
+                      type="text"
+                      placeholder="Your Name"
+                      className="w-full px-4 py-2.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
+                      value={hireFormData.name}
+                      onChange={(e) => setHireFormData({ ...hireFormData, name: e.target.value })}
+                      required
+                    />
+                    <input
+                      type="email"
+                      placeholder="Your Email"
+                      className="w-full px-4 py-2.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
+                      value={hireFormData.email}
+                      onChange={(e) => setHireFormData({ ...hireFormData, email: e.target.value })}
+                      required
+                    />
+                    <textarea
+                      placeholder="Your Message"
+                      rows="4"
+                      className="w-full px-4 py-2.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
+                      value={hireFormData.message}
+                      onChange={(e) => setHireFormData({ ...hireFormData, message: e.target.value })}
+                      required
+                    />
+                    
+                    {submitStatus === 'success' && (
+                      <div className="p-3 bg-green-50 border border-green-500 rounded-lg text-green-700 text-sm text-center">
+                        ✅ Message sent successfully! I'll contact you soon.
+                      </div>
+                    )}
+                    
+                    {submitStatus === 'error' && (
+                      <div className="p-3 bg-red-50 border border-red-500 rounded-lg text-red-700 text-sm text-center">
+                        ❌ Failed to send. Please try again or email me directly.
+                      </div>
+                    )}
+                    
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full py-3 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-900 shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? 'Sending...' : 'Send Message'}
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
@@ -1208,17 +1264,7 @@ const App1 = () => {
                 disabled={isSubmitting}
                 className="w-full py-3 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-900 shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? (
-                  <span className="flex items-center justify-center space-x-2">
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Sending...</span>
-                  </span>
-                ) : (
-                  'Send Message'
-                )}
+                {isSubmitting ? 'Sending...' : 'Send Message'}
               </button>
             </form>
           </div>
@@ -1413,90 +1459,5 @@ const ContactItem = ({ icon, label, value, link }) => (
     </div>
   </div>
 );
-
-// Contact Form Component
-const ContactForm = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus(null);
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/contact/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
-      
-      if (response.ok) {
-        setSubmitStatus('success');
-        setFormData({ name: '', email: '', message: '' });
-        setTimeout(() => setSubmitStatus(null), 5000);
-      } else {
-        setSubmitStatus('error');
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setSubmitStatus('error');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <input
-        type="text"
-        placeholder="Your Name"
-        className="w-full px-4 py-2.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
-        value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        required
-      />
-      <input
-        type="email"
-        placeholder="Your Email"
-        className="w-full px-4 py-2.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
-        value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        required
-      />
-      <textarea
-        placeholder="Your Message"
-        rows="3"
-        className="w-full px-4 py-2.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
-        value={formData.message}
-        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-        required
-      />
-      
-      {submitStatus === 'success' && (
-        <div className="p-3 bg-green-50 border border-green-500 rounded-lg text-green-700 text-sm">
-          ✅ Message sent successfully!
-        </div>
-      )}
-      
-      {submitStatus === 'error' && (
-        <div className="p-3 bg-red-50 border border-red-500 rounded-lg text-red-700 text-sm">
-          ❌ Failed to send message. Please try again.
-        </div>
-      )}
-      
-      <button 
-        type="submit" 
-        disabled={isSubmitting}
-        className="w-full px-6 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isSubmitting ? 'Sending...' : 'Send Message'}
-      </button>
-    </form>
-  );
-};
 
 export default App1;
