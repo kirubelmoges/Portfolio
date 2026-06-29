@@ -263,23 +263,23 @@ const App1 = () => {
     return () => window.removeEventListener('resize', updateItemsPerView);
   }, []);
 
-  // Auto-slide for projects
+  // Auto-slide for projects - decreased from 3000ms to 2500ms
   useEffect(() => {
     if (portfolio.projects?.length > 1 && !isPaused && !isDragging && isMounted.current) {
       projectAutoRef.current = setInterval(() => {
         setProjectIndex((prev) => (prev + 1) % portfolio.projects.length);
-      }, 3000);
+      }, 2500);
     }
     return () => clearInterval(projectAutoRef.current);
   }, [portfolio.projects, isPaused, isDragging]);
 
-  // Auto-slide for certificates
+  // Auto-slide for certificates - decreased from 3000ms to 2500ms
   useEffect(() => {
     const filteredCerts = getFilteredCertificates();
     if (filteredCerts.length > 1 && !isPaused && !isDragging && isMounted.current) {
       certAutoRef.current = setInterval(() => {
         setCertIndex((prev) => (prev + 1) % filteredCerts.length);
-      }, 3000);
+      }, 2500);
     }
     return () => clearInterval(certAutoRef.current);
   }, [portfolio.certificates, isPaused, isDragging]);
@@ -653,23 +653,23 @@ const App1 = () => {
           zIndex = 30;
           blur = 'blur(0px)';
         } else if (distance === 1) {
-          scale = 0.7;
+          scale = 0.65;
           translateY = 25;
-          opacity = 0.3;
+          opacity = 0.25;
           zIndex = 20;
-          blur = 'blur(2px)';
+          blur = 'blur(3px)';
         } else if (distance === 2) {
-          scale = 0.5;
+          scale = 0.4;
           translateY = 40;
-          opacity = 0.1;
+          opacity = 0.08;
           zIndex = 15;
-          blur = 'blur(4px)';
+          blur = 'blur(5px)';
         } else {
-          scale = 0.3;
+          scale = 0.25;
           translateY = 55;
-          opacity = 0.04;
+          opacity = 0.03;
           zIndex = 10;
-          blur = 'blur(6px)';
+          blur = 'blur(7px)';
           isVisible = false;
         }
       } else if (isTablet) {
@@ -771,7 +771,7 @@ const App1 = () => {
   const visibleCertificates = getVisibleItems(filteredCertificates, certIndex, itemsPerView);
 
   const getCardWidth = () => {
-    if (itemsPerView === 1) return 'w-[320px] max-w-[85vw]';
+    if (itemsPerView === 1) return 'w-[90%] max-w-[380px]';
     if (itemsPerView === 2) return 'w-[280px] max-w-[45vw]';
     return 'w-[300px] max-w-[320px]';
   };
@@ -964,7 +964,7 @@ const App1 = () => {
                   <button 
                     onClick={() => goToPrev('projects')}
                     aria-label="Previous slide"
-                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
+                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10"
                   >
                     <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -973,7 +973,7 @@ const App1 = () => {
                   <button 
                     onClick={() => goToNext('projects')}
                     aria-label="Next slide"
-                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
+                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10"
                   >
                     <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1090,7 +1090,7 @@ const App1 = () => {
                   <button 
                     onClick={() => goToPrev('certificates')}
                     aria-label="Previous slide"
-                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
+                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10"
                   >
                     <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1099,7 +1099,7 @@ const App1 = () => {
                   <button 
                     onClick={() => goToNext('certificates')}
                     aria-label="Next slide"
-                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200"
+                    className="p-2 bg-white/80 rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10"
                   >
                     <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
