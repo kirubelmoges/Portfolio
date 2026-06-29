@@ -4,7 +4,7 @@ import './App.css';
 const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
 const MEDIA_URL = 'https://portfolio-backend-ee1z.onrender.com';
 
-// Project Card Component - Converted from renderProjectCard function
+// Project Card Component - Updated with better mobile sizing and hover behavior
 const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, zIndex = 10, blur = 'blur(0px)', onImageClick, onVideoClick, getMediaUrl, openImageZoom, openVideoFullscreen }) => {
   const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
   const screenshotUrl = getMediaUrl(item, 'screenshots');
@@ -80,20 +80,29 @@ const ProjectCard = ({ item, isCenter, scale = 1, translateY = 0, opacity = 1, z
           {item.project_title}
         </h3>
         
-        {/* Description - Hidden initially, shows on hover */}
-        <div className={`transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <p className="text-gray-600 mb-3">
+        {/* Description - Always show 2 lines, expands on hover */}
+        <div className="overflow-hidden">
+          <p className={`text-gray-600 mb-3 transition-all duration-300 ${
+            isHovered ? 'line-clamp-none' : 'line-clamp-2'
+          }`}>
             {item.description}
           </p>
         </div>
         
-        {/* Tools - Hidden initially, shows on hover */}
-        <div className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-          {toolsList.map((tool, idx) => (
+        {/* Tools - Always show 1 line, expands on hover */}
+        <div className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${
+          isHovered ? 'max-h-40 opacity-100' : 'max-h-8 opacity-100'
+        }`}>
+          {toolsList.slice(0, isHovered ? toolsList.length : 3).map((tool, idx) => (
             <span key={idx} className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50 hover:border-blue-400 transition-all duration-300">
               {tool}
             </span>
           ))}
+          {!isHovered && toolsList.length > 3 && (
+            <span className="px-2 py-1 text-gray-500 rounded text-xs">
+              +{toolsList.length - 3} more
+            </span>
+          )}
         </div>
         
         <div className="flex gap-4 mt-4">
@@ -739,13 +748,13 @@ const App1 = () => {
 
   // Calculate padding for mobile/tablet to show adjacent cards
   const getContainerPadding = () => {
-    if (itemsPerView === 1) return '15%';
+    if (itemsPerView === 1) return '5%';
     if (itemsPerView === 2) return '8%';
     return '0';
   };
 
   const getCardWidth = () => {
-    if (itemsPerView === 1) return 'w-[70%] max-w-[320px]';
+    if (itemsPerView === 1) return 'w-[90%] max-w-[380px]';
     if (itemsPerView === 2) return 'w-[45%] max-w-[320px]';
     return 'w-[260px] md:w-[300px] lg:w-[320px]';
   };
