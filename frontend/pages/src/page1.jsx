@@ -887,43 +887,42 @@ const App1 = () => {
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-4">
-            {/* Title and Arrows */}
-            <div className="flex flex-col items-center mb-8">
-              <h2 className="text-3xl font-bold text-center text-gray-900">Featured Projects</h2>
-              
-              {portfolio.projects.length > 1 && (
-                <div className="flex gap-3 mt-4">
-                  <button 
-                    onClick={() => goToPrev('projects')}
-                    aria-label="Previous slide"
-                    className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
-                  >
-                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button 
-                    onClick={() => goToNext('projects')}
-                    aria-label="Next slide"
-                    className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
-                  >
-                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Title */}
+            <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Featured Projects</h2>
+            
+            {/* Navigation Arrows - Separate row under title */}
+            {portfolio.projects.length > 1 && (
+              <div className="flex justify-center gap-3 mb-6">
+                <button 
+                  onClick={() => goToPrev('projects')}
+                  aria-label="Previous slide"
+                  className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button 
+                  onClick={() => goToNext('projects')}
+                  aria-label="Next slide"
+                  className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
 
             {/* Projects Carousel */}
             <div className="relative w-full overflow-visible">
               {isMobile ? (
-                // MOBILE VIEW: 3 cards (left blur, center main, right blur)
+                // MOBILE VIEW: 3 cards with no gap
                 <div className="flex justify-center items-center relative" style={{ minHeight: '450px' }}>
-                  {/* Left Blur Card */}
+                  {/* Left Blur Card - touches main card with no gap */}
                   {projectCards.left && (
-                    <div className="absolute left-0 w-[10%] min-w-[60px] z-10 pointer-events-none">
-                      <div className="transform scale-75 opacity-40 blur-sm">
+                    <div className="absolute left-0 w-[10%] min-w-[50px] z-10 pointer-events-none">
+                      <div className="transform scale-75 opacity-40 blur-sm origin-right">
                         <ProjectCard 
                           item={projectCards.left}
                           isCenter={false}
@@ -938,7 +937,7 @@ const App1 = () => {
                   
                   {/* Center Main Card - 90% width */}
                   {projectCards.center && (
-                    <div className="w-[90%] max-w-[400px] z-20 mx-auto">
+                    <div className="w-[90%] max-w-[400px] z-20 mx-0">
                       <ProjectCard 
                         item={projectCards.center}
                         isCenter={true}
@@ -950,10 +949,10 @@ const App1 = () => {
                     </div>
                   )}
                   
-                  {/* Right Blur Card */}
+                  {/* Right Blur Card - touches main card with no gap */}
                   {projectCards.right && (
-                    <div className="absolute right-0 w-[10%] min-w-[60px] z-10 pointer-events-none">
-                      <div className="transform scale-75 opacity-40 blur-sm">
+                    <div className="absolute right-0 w-[10%] min-w-[50px] z-10 pointer-events-none">
+                      <div className="transform scale-75 opacity-40 blur-sm origin-left">
                         <ProjectCard 
                           item={projectCards.right}
                           isCenter={false}
@@ -1045,43 +1044,42 @@ const App1 = () => {
       {filteredCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-4">
-            {/* Title and Arrows */}
-            <div className="flex flex-col items-center mb-8">
-              <h2 className="text-3xl font-bold text-center text-gray-900">Certificates</h2>
-              
-              {filteredCertificates.length > 1 && (
-                <div className="flex gap-3 mt-4">
-                  <button 
-                    onClick={() => goToPrev('certificates')}
-                    aria-label="Previous slide"
-                    className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
-                  >
-                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button 
-                    onClick={() => goToNext('certificates')}
-                    aria-label="Next slide"
-                    className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
-                  >
-                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Title */}
+            <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Certificates</h2>
+            
+            {/* Navigation Arrows - Separate row under title */}
+            {filteredCertificates.length > 1 && (
+              <div className="flex justify-center gap-3 mb-6">
+                <button 
+                  onClick={() => goToPrev('certificates')}
+                  aria-label="Previous slide"
+                  className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button 
+                  onClick={() => goToNext('certificates')}
+                  aria-label="Next slide"
+                  className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 z-10 w-10 h-10 flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
 
             {/* Certificates Carousel */}
             <div className="relative w-full overflow-visible">
               {isMobile ? (
-                // MOBILE VIEW: 3 cards (left blur, center main, right blur)
+                // MOBILE VIEW: 3 cards with no gap
                 <div className="flex justify-center items-center relative" style={{ minHeight: '450px' }}>
-                  {/* Left Blur Card */}
+                  {/* Left Blur Card - touches main card with no gap */}
                   {certificateCards.left && (
-                    <div className="absolute left-0 w-[10%] min-w-[60px] z-10 pointer-events-none">
-                      <div className="transform scale-75 opacity-40 blur-sm">
+                    <div className="absolute left-0 w-[10%] min-w-[50px] z-10 pointer-events-none">
+                      <div className="transform scale-75 opacity-40 blur-sm origin-right">
                         <CertificateCard 
                           cert={certificateCards.left}
                           isCenter={false}
@@ -1095,7 +1093,7 @@ const App1 = () => {
                   
                   {/* Center Main Card - 90% width */}
                   {certificateCards.center && (
-                    <div className="w-[90%] max-w-[400px] z-20 mx-auto">
+                    <div className="w-[90%] max-w-[400px] z-20 mx-0">
                       <CertificateCard 
                         cert={certificateCards.center}
                         isCenter={true}
@@ -1106,10 +1104,10 @@ const App1 = () => {
                     </div>
                   )}
                   
-                  {/* Right Blur Card */}
+                  {/* Right Blur Card - touches main card with no gap */}
                   {certificateCards.right && (
-                    <div className="absolute right-0 w-[10%] min-w-[60px] z-10 pointer-events-none">
-                      <div className="transform scale-75 opacity-40 blur-sm">
+                    <div className="absolute right-0 w-[10%] min-w-[50px] z-10 pointer-events-none">
+                      <div className="transform scale-75 opacity-40 blur-sm origin-left">
                         <CertificateCard 
                           cert={certificateCards.right}
                           isCenter={false}
