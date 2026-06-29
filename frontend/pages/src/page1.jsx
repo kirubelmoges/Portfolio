@@ -115,11 +115,13 @@ const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoC
 
 // Certificate Card Component
 const CertificateCard = ({ cert, isCenter, isBlurred = false, onImageClick, getMediaUrl }) => {
+  const hasImage = cert.certificate_image || cert.certificate_image_url;
+  
   return (
     <div 
       className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'} ${isBlurred ? 'blur-sm opacity-40 scale-75' : ''}`}
     >
-      {cert.certificate_image && (
+      {hasImage && (
         <div 
           className="relative h-48 overflow-hidden rounded-lg m-4 cursor-pointer group"
           onClick={() => onImageClick(getMediaUrl(cert, 'certificate_image'), cert.certificate_name)}
@@ -312,21 +314,67 @@ const App1 = () => {
       if (!response.ok) throw new Error('Failed to fetch data');
       const data = await response.json();
       
-      // Get certificates data
-      let certs = data.certificates || [];
+      // Get all certificates
+      const certs = data.certificates || [];
       
-      // Filter Resume and CV from certificates
-      const resumeItems = certs.filter(cert => 
-        cert.certificate_name?.toLowerCase().includes('resume')
+      // Function to check if certificate has a file
+      const hasFile = (cert) => {
+        return cert.certificate_image || cert.certificate_image_url;
+      };
+      
+      // Function to check if file is a Resume (from filename)
+      const isResume = (cert) => {
+        if (!hasFile(cert)) return false;
+        
+        const name = cert.certificate_name?.toLowerCase() || '';
+        const filePath = cert.certificate_image || '';
+        const fileName = filePath.split('/').pop()?.toLowerCase() || '';
+        const url = cert.certificate_image_url || '';
+        const urlFileName = url.split('/').pop()?.toLowerCase() || '';
+        
+        return name.includes('resume') || 
+               fileName.includes('resume') || 
+               urlFileName.includes('resume');
+      };
+      
+      // Function to check if file is a CV (from filename)
+      const isCV = (cert) => {
+        if (!hasFile(cert)) return false;
+        
+        const name = cert.certificate_name?.toLowerCase() || '';
+        const filePath = cert.certificate_image || '';
+        const fileName = filePath.split('/').pop()?.toLowerCase() || '';
+        const url = cert.certificate_image_url || '';
+        const urlFileName = url.split('/').pop()?.toLowerCase() || '';
+        
+        return name.includes('cv') || 
+               name.includes('curriculum vitae') ||
+               fileName.includes('cv') || 
+               urlFileName.includes('cv');
+      };
+      
+      // Filter: Find certificates with files
+      const certificatesWithFiles = certs.filter(cert => hasFile(cert));
+      
+      // Filter: Find Resume from those with files
+      const resumeItems = certificatesWithFiles.filter(cert => isResume(cert));
+      
+      // Filter: Find CV from those with files
+      const cvItems = certificatesWithFiles.filter(cert => isCV(cert));
+      
+      // Remove duplicates (if a file is both Resume and CV, keep it in Resume)
+      const uniqueCVItems = cvItems.filter(cv => 
+        !resumeItems.some(resume => resume.id === cv.id)
       );
       
-      const cvItems = certs.filter(cert => 
-        cert.certificate_name?.toLowerCase().includes('cv') ||
-        cert.certificate_name?.toLowerCase().includes('curriculum vitae')
-      );
+      // Combine for the Resume section
+      data.resume = [...resumeItems, ...uniqueCVItems];
       
-      // Combine and set as resume data
-      data.resume = [...resumeItems, ...cvItems];
+      // Log for debugging
+      console.log('Total Certificates:', certs.length);
+      console.log('Certificates with Files:', certificatesWithFiles.length);
+      console.log('Resume Items:', resumeItems);
+      console.log('CV Items:', cvItems);
       
       if (isMounted.current) {
         setPortfolio(data);
@@ -343,8 +391,10 @@ const App1 = () => {
   const getMediaUrl = (item, fieldName) => {
     if (!item) return null;
     
-    // For certificate items, we need to get the certificate_image_url
-    // For resume/CV items from certificates, we use certificate_image
+    // Check if certificate has image
+    if (item.certificate_image_url) {
+      return item.certificate_image_url;
+    }
     if (item.certificate_image) {
       return getFileUrl(item.certificate_image);
     }
@@ -387,13 +437,23 @@ const App1 = () => {
   };
 
   const handleDownloadResume = async () => {
-    // Get resume items from certificates
-    const resumeItems = portfolio.certificates?.filter(cert => 
-      cert.certificate_name?.toLowerCase().includes('resume')
-    ) || [];
+    // Get Resume items from certificates
+    const allCerts = portfolio.certificates || [];
+    
+    const resumeItems = allCerts.filter(cert => {
+      const name = cert.certificate_name?.toLowerCase() || '';
+      const filePath = cert.certificate_image || '';
+      const fileName = filePath.split('/').pop()?.toLowerCase() || '';
+      const url = cert.certificate_image_url || '';
+      const urlFileName = url.split('/').pop()?.toLowerCase() || '';
+      
+      return name.includes('resume') || 
+             fileName.includes('resume') || 
+             urlFileName.includes('resume');
+    });
     
     if (resumeItems.length === 0) {
-      alert('Resume file not available. Please upload a resume in the admin panel.');
+      alert('Resume file not found. Please upload a resume in the admin panel.');
       return;
     }
 
@@ -424,13 +484,23 @@ const App1 = () => {
 
   const handleDownloadCV = async () => {
     // Get CV items from certificates
-    const cvItems = portfolio.certificates?.filter(cert => 
-      cert.certificate_name?.toLowerCase().includes('cv') ||
-      cert.certificate_name?.toLowerCase().includes('curriculum vitae')
-    ) || [];
+    const allCerts = portfolio.certificates || [];
+    
+    const cvItems = allCerts.filter(cert => {
+      const name = cert.certificate_name?.toLowerCase() || '';
+      const filePath = cert.certificate_image || '';
+      const fileName = filePath.split('/').pop()?.toLowerCase() || '';
+      const url = cert.certificate_image_url || '';
+      const urlFileName = url.split('/').pop()?.toLowerCase() || '';
+      
+      return name.includes('cv') || 
+             name.includes('curriculum vitae') ||
+             fileName.includes('cv') || 
+             urlFileName.includes('cv');
+    });
     
     if (cvItems.length === 0) {
-      alert('CV file not available. Please upload a CV in the admin panel.');
+      alert('CV file not found. Please upload a CV in the admin panel.');
       return;
     }
 
@@ -559,10 +629,24 @@ const App1 = () => {
   };
 
   const getFilteredCertificates = () => {
-    return portfolio.certificates?.filter(cert => 
-      !cert.certificate_name?.toLowerCase().includes('resume') && 
-      !cert.certificate_name?.toLowerCase().includes('cv')
-    ) || [];
+    return portfolio.certificates?.filter(cert => {
+      // Exclude certificates that are Resume or CV
+      const name = cert.certificate_name?.toLowerCase() || '';
+      const filePath = cert.certificate_image || '';
+      const fileName = filePath.split('/').pop()?.toLowerCase() || '';
+      const url = cert.certificate_image_url || '';
+      const urlFileName = url.split('/').pop()?.toLowerCase() || '';
+      
+      const isResumeOrCV = name.includes('resume') || 
+                          name.includes('cv') || 
+                          name.includes('curriculum vitae') ||
+                          fileName.includes('resume') || 
+                          fileName.includes('cv') ||
+                          urlFileName.includes('resume') || 
+                          urlFileName.includes('cv');
+      
+      return !isResumeOrCV;
+    }) || [];
   };
 
   // Get the three cards for mobile view (left blur, center, right blur)
@@ -711,18 +795,42 @@ const App1 = () => {
   const projectCards = getProjectCards();
   const certificateCards = getCertificateCards();
 
-  // Get Resume and CV items from certificates
-  const resumeItems = portfolio.certificates?.filter(cert => 
-    cert.certificate_name?.toLowerCase().includes('resume')
-  ) || [];
+  // Get Resume and CV items from certificates (only those with files)
+  const allCerts = portfolio.certificates || [];
+  
+  const resumeItems = allCerts.filter(cert => {
+    const name = cert.certificate_name?.toLowerCase() || '';
+    const filePath = cert.certificate_image || '';
+    const fileName = filePath.split('/').pop()?.toLowerCase() || '';
+    const url = cert.certificate_image_url || '';
+    const urlFileName = url.split('/').pop()?.toLowerCase() || '';
+    
+    return (name.includes('resume') || 
+            fileName.includes('resume') || 
+            urlFileName.includes('resume')) &&
+            (cert.certificate_image || cert.certificate_image_url);
+  });
 
-  const cvItems = portfolio.certificates?.filter(cert => 
-    cert.certificate_name?.toLowerCase().includes('cv') ||
-    cert.certificate_name?.toLowerCase().includes('curriculum vitae')
-  ) || [];
+  const cvItems = allCerts.filter(cert => {
+    const name = cert.certificate_name?.toLowerCase() || '';
+    const filePath = cert.certificate_image || '';
+    const fileName = filePath.split('/').pop()?.toLowerCase() || '';
+    const url = cert.certificate_image_url || '';
+    const urlFileName = url.split('/').pop()?.toLowerCase() || '';
+    
+    return (name.includes('cv') || 
+            name.includes('curriculum vitae') ||
+            fileName.includes('cv') || 
+            urlFileName.includes('cv')) &&
+            (cert.certificate_image || cert.certificate_image_url);
+  });
 
-  // Combine for display
-  const resumeCVItems = [...resumeItems, ...cvItems];
+  // Remove duplicates
+  const uniqueCVItems = cvItems.filter(cv => 
+    !resumeItems.some(resume => resume.id === cv.id)
+  );
+
+  const resumeCVItems = [...resumeItems, ...uniqueCVItems];
 
   return (
     <div className="bg-white">
@@ -1000,7 +1108,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section */}
+      {/* Certificates Section - Excludes Resume and CV */}
       {filteredCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-10 bg-white/50 backdrop-blur-sm overflow-hidden">
           <div className="container mx-auto px-4">
@@ -1062,16 +1170,15 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Resume Section - Now using certificates data */}
+      {/* Resume Section - Shows only Resume and CV */}
       {resumeCVItems.length > 0 && (
         <section ref={sectionRefs.resume} id="resume" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Resume & CV</h2>
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {resumeCVItems.map((item, index) => {
-                const isResume = item.certificate_name?.toLowerCase().includes('resume');
-                const isCV = item.certificate_name?.toLowerCase().includes('cv') || 
-                             item.certificate_name?.toLowerCase().includes('curriculum vitae');
+                const isResume = item.certificate_name?.toLowerCase().includes('resume') ||
+                                (item.certificate_image || '').toLowerCase().includes('resume');
                 const fileUrl = getMediaUrl(item, 'certificate_image');
                 const fileName = item.certificate_name || 'file';
                 const fileExt = fileUrl ? fileUrl.split('.').pop() || 'pdf' : 'pdf';
