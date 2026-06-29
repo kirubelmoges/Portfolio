@@ -774,7 +774,7 @@ const App1 = () => {
         </div>
       </nav>
 
-      {/* Hero Section - Reduced padding */}
+      {/* Hero Section */}
       <section ref={sectionRefs.home} id="home" className="relative">
         <div className="w-full h-[180px] md:h-[240px] lg:h-[280px] overflow-hidden bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 cursor-pointer">
           {portfolio.introduction?.imagebackground && (
@@ -848,7 +848,7 @@ const App1 = () => {
         </div>
       </section>
 
-      {/* About Section - Reduced padding */}
+      {/* About Section */}
       {portfolio.introduction?.about_me && (
         <section ref={sectionRefs.about} id="about" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -869,7 +869,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Skills Section - Reduced padding */}
+      {/* Skills Section */}
       {portfolio.skills?.length > 0 && portfolio.skills[0] && (
         <section ref={sectionRefs.skills} id="skills" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -883,78 +883,77 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section - Reduced padding */}
+      {/* Projects Section - Arrows under title like certificates */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-10 bg-white/50 backdrop-blur-sm overflow-hidden">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-6 text-gray-900">Featured Projects</h2>
+            <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Featured Projects</h2>
             
-            {/* Navigation Arrows */}
-            <div className="relative max-w-6xl mx-auto">
+            {/* Navigation Arrows - Under the title (same as certificates) */}
+            <div className="relative z-[100] flex justify-center gap-4 mb-6">
               <button 
                 onClick={() => goToPrev('projects')} 
-                className="absolute left-[-10px] md:left-[-20px] top-1/2 -translate-y-1/2 z-[110] p-3 bg-white/90 shadow-xl rounded-full hover:bg-blue-600 hover:text-white transition-all border border-gray-100 group"
+                className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 transition border border-gray-200"
                 aria-label="Previous Project"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M15 19l-7-7 7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M15 19l-7-7 7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-
               <button 
                 onClick={() => goToNext('projects')} 
-                className="absolute right-[-10px] md:right-[-20px] top-1/2 -translate-y-1/2 z-[110] p-3 bg-white/90 shadow-xl rounded-full hover:bg-blue-600 hover:text-white transition-all border border-gray-100 group"
+                className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 transition border border-gray-200"
                 aria-label="Next Project"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M9 5l7 7-7 7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 5l7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
+            </div>
 
-              <div className="relative w-full">
-                {isMobile ? (
-                  <div className="flex justify-center items-center relative py-4 h-[380px]">
-                    <div className="w-[75%] max-w-[300px] relative z-20">
-                      <ProjectCard item={projectCards.center} isCenter={true} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
-                      
-                      {projectCards.left && (
-                        <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
-                          <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[1px] translate-x-[1px]">
-                            <ProjectCard item={projectCards.left} isCenter={false} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
-                          </div>
+            <div className="relative w-full">
+              {isMobile ? (
+                <div className="flex justify-center items-center relative py-4 h-[380px]">
+                  <div className="w-[75%] max-w-[300px] relative z-20">
+                    <ProjectCard item={projectCards.center} isCenter={true} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
+                    
+                    {projectCards.left && (
+                      <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
+                        <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[1px] translate-x-[1px]">
+                          <ProjectCard item={projectCards.left} isCenter={false} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
                         </div>
-                      )}
-
-                      {projectCards.right && (
-                        <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
-                          <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[1px] -translate-x-[1px]">
-                            <ProjectCard item={projectCards.right} isCenter={false} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex gap-4 overflow-visible pb-4 justify-center items-start h-[480px]">
-                    {projectCards.map((p, idx) => (
-                      <div 
-                        key={idx}
-                        className="flex-shrink-0 transition-all duration-500"
-                        style={{
-                          width: p.isCenter ? '320px' : '260px',
-                          transform: `scale(${p.scale}) translateY(${p.translateY}px)`,
-                          opacity: p.opacity,
-                          zIndex: p.zIndex,
-                          filter: p.blur,
-                          pointerEvents: p.isCenter ? 'auto' : 'none'
-                        }}
-                      >
-                        <ProjectCard item={p} isCenter={p.isCenter} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
                       </div>
-                    ))}
+                    )}
+
+                    {projectCards.right && (
+                      <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
+                        <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[1px] -translate-x-[1px]">
+                          <ProjectCard item={projectCards.right} isCenter={false} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="flex gap-4 overflow-visible pb-4 justify-center items-start h-[480px]">
+                  {projectCards.map((p, idx) => (
+                    <div 
+                      key={idx}
+                      className="flex-shrink-0 transition-all duration-500"
+                      style={{
+                        width: p.isCenter ? '320px' : '260px',
+                        transform: `scale(${p.scale}) translateY(${p.translateY}px)`,
+                        opacity: p.opacity,
+                        zIndex: p.zIndex,
+                        filter: p.blur,
+                        pointerEvents: p.isCenter ? 'auto' : 'none'
+                      }}
+                    >
+                      <ProjectCard item={p} isCenter={p.isCenter} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Pagination Dots */}
@@ -971,7 +970,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Experience Section - Reduced padding */}
+      {/* Experience Section */}
       {portfolio.experience?.length > 0 && (
         <section ref={sectionRefs.experience} id="experience" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -985,17 +984,17 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section - Reduced padding */}
+      {/* Certificates Section */}
       {filteredCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-10 bg-white/50 backdrop-blur-sm overflow-hidden">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Certificates</h2>
             
             <div className="relative z-[100] flex justify-center gap-4 mb-6">
-              <button onClick={() => goToPrev('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 border border-gray-200">
+              <button onClick={() => goToPrev('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 transition border border-gray-200">
                 <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
-              <button onClick={() => goToNext('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 border border-gray-200">
+              <button onClick={() => goToNext('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 transition border border-gray-200">
                 <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
             </div>
@@ -1047,7 +1046,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Resume Section - Reduced padding */}
+      {/* Resume Section */}
       {portfolio.resume && portfolio.resume.length > 0 && (
         <section ref={sectionRefs.resume} id="resume" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -1091,7 +1090,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Education Section - Reduced padding */}
+      {/* Education Section */}
       {portfolio.education?.length > 0 && (
         <section ref={sectionRefs.education} id="education" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -1105,7 +1104,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Articles Section - Reduced padding */}
+      {/* Articles Section */}
       {portfolio.articles?.length > 0 && (
         <section ref={sectionRefs.articles} id="articles" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -1119,7 +1118,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Contact Section - Reduced padding */}
+      {/* Contact Section */}
       {portfolio.contact && (
         <section ref={sectionRefs.contact} id="contact" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
