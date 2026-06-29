@@ -312,21 +312,21 @@ const App1 = () => {
       if (!response.ok) throw new Error('Failed to fetch data');
       const data = await response.json();
       
-      try {
-        const resumeResponse = await fetch(`${API_BASE_URL}/resume/`);
-        if (resumeResponse.ok) {
-          const resumeData = await resumeResponse.json();
-          data.resume = resumeData;
-        }
-      } catch (e) {
-        console.log('Resume endpoint not available, using certificate fallback');
-        if (data.certificates) {
-          data.resume = data.certificates.filter(cert => 
-            cert.certificate_name?.toLowerCase().includes('resume') ||
-            cert.certificate_name?.toLowerCase().includes('cv')
-          );
-        }
-      }
+      // Get certificates data
+      let certs = data.certificates || [];
+      
+      // Filter Resume and CV from certificates
+      const resumeItems = certs.filter(cert => 
+        cert.certificate_name?.toLowerCase().includes('resume')
+      );
+      
+      const cvItems = certs.filter(cert => 
+        cert.certificate_name?.toLowerCase().includes('cv') ||
+        cert.certificate_name?.toLowerCase().includes('curriculum vitae')
+      );
+      
+      // Combine and set as resume data
+      data.resume = [...resumeItems, ...cvItems];
       
       if (isMounted.current) {
         setPortfolio(data);
@@ -342,6 +342,12 @@ const App1 = () => {
 
   const getMediaUrl = (item, fieldName) => {
     if (!item) return null;
+    
+    // For certificate items, we need to get the certificate_image_url
+    // For resume/CV items from certificates, we use certificate_image
+    if (item.certificate_image) {
+      return getFileUrl(item.certificate_image);
+    }
     
     const cloudinaryFields = {
       'image': 'image_url',
@@ -381,27 +387,26 @@ const App1 = () => {
   };
 
   const handleDownloadResume = async () => {
-    let resumeFiles = [];
+    // Get resume items from certificates
+    const resumeItems = portfolio.certificates?.filter(cert => 
+      cert.certificate_name?.toLowerCase().includes('resume')
+    ) || [];
     
-    if (portfolio.resume && portfolio.resume.length > 0) {
-      resumeFiles = portfolio.resume.filter(item => item.resume_file || item.resume_file_url);
-    }
-    
-    if (resumeFiles.length === 0) {
-      alert('Resume files not available. Please upload a resume in the admin panel.');
+    if (resumeItems.length === 0) {
+      alert('Resume file not available. Please upload a resume in the admin panel.');
       return;
     }
 
     setDownloadingResume(true);
     
     try {
-      for (const item of resumeFiles) {
-        const fileUrl = getMediaUrl(item, 'resume_file');
+      for (const item of resumeItems) {
+        const fileUrl = getMediaUrl(item, 'certificate_image');
         if (fileUrl) {
           const fileExt = fileUrl.split('.').pop() || 'pdf';
           const link = document.createElement('a');
           link.href = fileUrl;
-          link.download = `Resume_${item.resume_name || 'file'}.${fileExt}`;
+          link.download = `Resume_${item.certificate_name || 'file'}.${fileExt}`;
           link.target = '_blank';
           document.body.appendChild(link);
           link.click();
@@ -418,27 +423,27 @@ const App1 = () => {
   };
 
   const handleDownloadCV = async () => {
-    let cvFiles = [];
+    // Get CV items from certificates
+    const cvItems = portfolio.certificates?.filter(cert => 
+      cert.certificate_name?.toLowerCase().includes('cv') ||
+      cert.certificate_name?.toLowerCase().includes('curriculum vitae')
+    ) || [];
     
-    if (portfolio.resume && portfolio.resume.length > 0) {
-      cvFiles = portfolio.resume.filter(item => item.cv_file || item.cv_file_url);
-    }
-    
-    if (cvFiles.length === 0) {
-      alert('CV files not available. Please upload a CV in the admin panel.');
+    if (cvItems.length === 0) {
+      alert('CV file not available. Please upload a CV in the admin panel.');
       return;
     }
 
     setDownloadingCV(true);
     
     try {
-      for (const item of cvFiles) {
-        const fileUrl = getMediaUrl(item, 'cv_file');
+      for (const item of cvItems) {
+        const fileUrl = getMediaUrl(item, 'certificate_image');
         if (fileUrl) {
           const fileExt = fileUrl.split('.').pop() || 'pdf';
           const link = document.createElement('a');
           link.href = fileUrl;
-          link.download = `CV_${item.resume_name || 'file'}.${fileExt}`;
+          link.download = `CV_${item.certificate_name || 'file'}.${fileExt}`;
           link.target = '_blank';
           document.body.appendChild(link);
           link.click();
@@ -706,6 +711,19 @@ const App1 = () => {
   const projectCards = getProjectCards();
   const certificateCards = getCertificateCards();
 
+  // Get Resume and CV items from certificates
+  const resumeItems = portfolio.certificates?.filter(cert => 
+    cert.certificate_name?.toLowerCase().includes('resume')
+  ) || [];
+
+  const cvItems = portfolio.certificates?.filter(cert => 
+    cert.certificate_name?.toLowerCase().includes('cv') ||
+    cert.certificate_name?.toLowerCase().includes('curriculum vitae')
+  ) || [];
+
+  // Combine for display
+  const resumeCVItems = [...resumeItems, ...cvItems];
+
   return (
     <div className="bg-white">
       {/* Navigation Bar */}
@@ -883,13 +901,12 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section - Arrows under title like certificates */}
+      {/* Projects Section */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-10 bg-white/50 backdrop-blur-sm overflow-hidden">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Featured Projects</h2>
             
-            {/* Navigation Arrows - Under the title (same as certificates) */}
             <div className="relative z-[100] flex justify-center gap-4 mb-6">
               <button 
                 onClick={() => goToPrev('projects')} 
@@ -956,7 +973,6 @@ const App1 = () => {
               )}
             </div>
 
-            {/* Pagination Dots */}
             <div className="flex justify-center gap-2 mt-3">
               {portfolio.projects.map((_, idx) => (
                 <button
@@ -1046,45 +1062,49 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Resume Section */}
-      {portfolio.resume && portfolio.resume.length > 0 && (
+      {/* Resume Section - Now using certificates data */}
+      {resumeCVItems.length > 0 && (
         <section ref={sectionRefs.resume} id="resume" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Resume & CV</h2>
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {portfolio.resume.map((item, index) => (
-                <div key={index} className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.resume_name}</h3>
-                  <div className="space-y-2">
-                    {(item.resume_file || item.resume_file_url) && (
+              {resumeCVItems.map((item, index) => {
+                const isResume = item.certificate_name?.toLowerCase().includes('resume');
+                const isCV = item.certificate_name?.toLowerCase().includes('cv') || 
+                             item.certificate_name?.toLowerCase().includes('curriculum vitae');
+                const fileUrl = getMediaUrl(item, 'certificate_image');
+                const fileName = item.certificate_name || 'file';
+                const fileExt = fileUrl ? fileUrl.split('.').pop() || 'pdf' : 'pdf';
+                
+                return (
+                  <div key={index} className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{item.certificate_name}</h3>
+                    {fileUrl && (
                       <a 
-                        href={getMediaUrl(item, 'resume_file')}
+                        href={fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition"
+                        className={`flex items-center space-x-2 transition ${isResume ? 'text-blue-600 hover:text-blue-800' : 'text-green-600 hover:text-green-800'}`}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <span>Download Resume</span>
+                        <span>Download {isResume ? 'Resume' : 'CV'}</span>
                       </a>
                     )}
-                    {(item.cv_file || item.cv_file_url) && (
+                    {item.certificate_link && (
                       <a 
-                        href={getMediaUrl(item, 'cv_file')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center space-x-2 text-green-600 hover:text-green-800 transition"
+                        href={item.certificate_link} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-block mt-3 text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <span>Download CV</span>
+                        View Certificate →
                       </a>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
