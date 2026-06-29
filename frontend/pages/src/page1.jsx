@@ -1026,130 +1026,77 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section */}
-      {filteredCertificates.length > 0 && (
-        <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm overflow-hidden">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Certificates</h2>
-            
-            {/* Navigation Arrows - Increased Z-Index to z-40 */}
-            {filteredCertificates.length > 1 && (
-              <div className="flex justify-center gap-3 mb-6 relative z-40">
-                <button 
-                  onClick={() => goToPrev('certificates')}
-                  className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 w-10 h-10 flex items-center justify-center"
-                >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button 
-                  onClick={() => goToNext('certificates')}
-                  className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition border border-gray-200 w-10 h-10 flex items-center justify-center"
-                >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            )}
+     
 
-            <div className="relative w-full">
-              {isMobile ? (
-                /* MOBILE VIEW: Side cards touch the center card exactly */
-                <div className="flex justify-center items-center relative py-10" style={{ minHeight: '400px' }}>
-                  {/* Center Anchor Card */}
-                  <div className="w-[75%] max-w-[320px] relative z-20 shadow-2xl">
-                    <CertificateCard 
-                      cert={certificateCards.center}
-                      isCenter={true}
-                      onImageClick={openImageZoom}
-                      getMediaUrl={getMediaUrl}
-                    />
-                    
-                    {/* Left Card - Pinned to left edge of center */}
-                    {certificateCards.left && (
-                      <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
-                        <div className="transform scale-90 origin-right opacity-40 blur-0">
-                          <CertificateCard 
-                            cert={certificateCards.left}
-                            isCenter={false}
-                            isBlurred={true}
-                            onImageClick={openImageZoom}
-                            getMediaUrl={getMediaUrl}
-                          />
-                        </div>
-                      </div>
-                    )}
 
-                    {/* Right Card - Pinned to right edge of center */}
-                    {certificateCards.right && (
-                      <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
-                        <div className="transform scale-90 origin-left opacity-40 blur-0">
-                          <CertificateCard 
-                            cert={certificateCards.right}
-                            isCenter={false}
-                            isBlurred={true}
-                            onImageClick={openImageZoom}
-                            getMediaUrl={getMediaUrl}
-                          />
-                        </div>
-                      </div>
-                    )}
+     {/* Certificates Section */}
+{filteredCertificates.length > 0 && (
+  <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm overflow-hidden">
+    <div className="container mx-auto px-4">
+      <h2 className="text-3xl font-bold text-center mb-6 text-gray-900">Certificates</h2>
+      
+      <div className="relative z-[100] flex justify-center gap-4 mb-8">
+        <button onClick={() => goToPrev('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 border border-gray-200">
+          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+        <button onClick={() => goToNext('certificates')} className="p-3 bg-white shadow-lg rounded-full hover:bg-gray-100 border border-gray-200">
+          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div className="relative w-full">
+        {isMobile ? (
+          <div className="flex justify-center items-center relative py-5 h-[320px]">
+            <div className="w-[70%] max-w-[260px] relative z-20">
+              <CertificateCard cert={certificateCards.center} isCenter={true} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
+              
+              {/* Left Card */}
+              {certificateCards.left && (
+                <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
+                  <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[1px] translate-x-[1px]">
+                    <CertificateCard cert={certificateCards.left} isCenter={false} getMediaUrl={getMediaUrl} />
                   </div>
                 </div>
-              ) : (
-                /* DESKTOP VIEW */
-                <div 
-                  ref={certificateSliderRef}
-                  className="flex gap-4 overflow-x-auto pb-6 justify-center items-start relative z-10"
-                  style={{ scrollbarWidth: 'none', minHeight: '480px' }}
-                  onMouseEnter={() => setIsPaused(true)}
-                  onMouseLeave={() => setIsPaused(false)}
-                >
-                  {Array.isArray(certificateCards) && certificateCards.map((cert, idx) => (
-                    <div 
-                      key={`${cert.originalIndex}-${idx}`} 
-                      className="flex-shrink-0 transition-all duration-500"
-                      style={{
-                        width: cert.isCenter ? '320px' : '260px',
-                        transform: `scale(${cert.scale}) translateY(${cert.translateY}px)`,
-                        opacity: cert.opacity,
-                        zIndex: cert.zIndex,
-                        filter: cert.blur,
-                        pointerEvents: cert.isCenter ? 'auto' : 'none',
-                      }}
-                    >
-                      <CertificateCard 
-                        cert={cert}
-                        isCenter={cert.isCenter}
-                        onImageClick={openImageZoom}
-                        getMediaUrl={getMediaUrl}
-                      />
-                    </div>
-                  ))}
+              )}
+
+              {/* Right Card */}
+              {certificateCards.right && (
+                <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
+                  <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[1px] -translate-x-[1px]">
+                    <CertificateCard cert={certificateCards.right} isCenter={false} getMediaUrl={getMediaUrl} />
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Pagination Dots */}
-            {filteredCertificates.length > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
-                {filteredCertificates.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => goToSlide('certificates', idx)}
-                    aria-label={`Go to slide ${idx + 1}`}
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                      idx === certIndex ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
           </div>
-        </section>
-      )}
+        ) : (
+          <div className="flex gap-4 overflow-visible pb-6 justify-center items-start h-[400px]">
+            {certificateCards.map((c, idx) => (
+              <div 
+                key={idx}
+                className="flex-shrink-0 transition-all duration-500"
+                style={{
+                  width: c.isCenter ? '280px' : '220px',
+                  transform: `scale(${c.scale}) translateY(${c.translateY}px)`,
+                  opacity: c.opacity,
+                  zIndex: c.zIndex,
+                  filter: c.blur
+                }}
+              >
+                <CertificateCard cert={c} isCenter={c.isCenter} onImageClick={openImageZoom} getMediaUrl={getMediaUrl} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+)}
+
+
+
+
+
 
       {/* Resume Section */}
       {portfolio.resume && portfolio.resume.length > 0 && (
