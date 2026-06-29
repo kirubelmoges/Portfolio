@@ -1056,7 +1056,7 @@ const App1 = () => {
 
             <div className="relative">
   {isMobile ? (
-    /* MOBILE VIEW: Side cards touch the center card exactly on the horizontal axis */
+   
     <div className="flex justify-center items-center relative py-10" style={{ minHeight: '450px' }}>
       
       {/* 1. Center Anchor Card - The "Main" card */}
@@ -1073,7 +1073,7 @@ const App1 = () => {
           /* "right-full" places this div's right edge at the center card's left edge */
           <div className="absolute top-0 right-full w-full h-full z-10 pointer-events-none">
             /* "origin-right" ensures that when it scales down, it stays glued to the right edge */
-            <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[2px] translate-x-[1px]">
+            <div className="w-full h-full transform scale-90 origin-right opacity-40 blur-[10px] translate-x-[1px]">
               <CertificateCard 
                 cert={certificateCards.left}
                 isCenter={false}
@@ -1087,10 +1087,10 @@ const App1 = () => {
 
         {/* 3. Right Card - Pinned to the Right Edge of the center card */}
         {certificateCards.right && (
-          /* "left-full" places this div's left edge at the center card's right edge */
+          
           <div className="absolute top-0 left-full w-full h-full z-10 pointer-events-none">
-            /* "origin-left" ensures that when it scales down, it stays glued to the left edge */
-            <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[2px] -translate-x-[1px]">
+            
+            <div className="w-full h-full transform scale-90 origin-left opacity-40 blur-[10px] -translate-x-[1px]">
               <CertificateCard 
                 cert={certificateCards.right}
                 isCenter={false}
