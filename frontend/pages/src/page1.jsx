@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 
 const API_BASE_URL = 'https://portfolio-backend-ee1z.onrender.com/kirubel/api';
@@ -35,15 +35,20 @@ const App1 = () => {
   const [downloadingResume, setDownloadingResume] = useState(false);
   const [downloadingCV, setDownloadingCV] = useState(false);
   
-  // Carousel states
+  // Carousel states - Projects
   const [projectIndex, setProjectIndex] = useState(0);
   const [certIndex, setCertIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [itemsPerView, setItemsPerView] = useState(3);
+  
+  // Refs
   const projectAutoRef = useRef(null);
   const certAutoRef = useRef(null);
   const projectSliderRef = useRef(null);
   const certificateSliderRef = useRef(null);
+  
+  // Track if component is mounted
+  const isMounted = useRef(true);
 
   const sectionRefs = {
     home: useRef(null),
@@ -60,6 +65,9 @@ const App1 = () => {
 
   useEffect(() => {
     fetchFullPortfolio();
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   // Get items per view based on screen width
@@ -77,7 +85,7 @@ const App1 = () => {
 
   // Auto-slide for projects carousel
   useEffect(() => {
-    if (portfolio.projects?.length > 1 && !isPaused) {
+    if (portfolio.projects?.length > 1 && !isPaused && isMounted.current) {
       projectAutoRef.current = setInterval(() => {
         setProjectIndex((prev) => (prev + 1) % portfolio.projects.length);
       }, 3000);
@@ -91,7 +99,7 @@ const App1 = () => {
       !cert.certificate_name?.toLowerCase().includes('resume') && 
       !cert.certificate_name?.toLowerCase().includes('cv')
     ) || [];
-    if (filteredCerts.length > 1 && !isPaused) {
+    if (filteredCerts.length > 1 && !isPaused && isMounted.current) {
       certAutoRef.current = setInterval(() => {
         setCertIndex((prev) => (prev + 1) % filteredCerts.length);
       }, 3000);
@@ -102,7 +110,9 @@ const App1 = () => {
   // Pause on interaction, resume after 5 seconds
   useEffect(() => {
     if (!isPaused) return;
-    const timer = setTimeout(() => setIsPaused(false), 5000);
+    const timer = setTimeout(() => {
+      if (isMounted.current) setIsPaused(false);
+    }, 5000);
     return () => clearTimeout(timer);
   }, [isPaused]);
 
@@ -161,11 +171,15 @@ const App1 = () => {
         }
       }
       
-      setPortfolio(data);
-      setLoading(false);
+      if (isMounted.current) {
+        setPortfolio(data);
+        setLoading(false);
+      }
     } catch (err) {
-      setError(err.message);
-      setLoading(false);
+      if (isMounted.current) {
+        setError(err.message);
+        setLoading(false);
+      }
     }
   };
 
@@ -350,11 +364,13 @@ const App1 = () => {
   const goToPrev = (type) => {
     setIsPaused(true);
     if (type === 'projects' && portfolio.projects?.length > 0) {
-      setProjectIndex((prev) => (prev - 1 + portfolio.projects.length) % portfolio.projects.length);
+      const newIndex = projectIndex === 0 ? portfolio.projects.length - 1 : projectIndex - 1;
+      setProjectIndex(newIndex);
     } else if (type === 'certificates') {
       const filtered = getFilteredCertificates();
       if (filtered.length > 0) {
-        setCertIndex((prev) => (prev - 1 + filtered.length) % filtered.length);
+        const newIndex = certIndex === 0 ? filtered.length - 1 : certIndex - 1;
+        setCertIndex(newIndex);
       }
     }
   };
@@ -387,26 +403,30 @@ const App1 = () => {
     ) || [];
   };
 
+  // Get visible items for carousel - properly centered
   const getVisibleItems = (items, currentIndex) => {
     if (!items || items.length === 0) return [];
     const count = Math.min(itemsPerView, items.length);
     const visible = [];
+    const startOffset = Math.floor((count - 1) / 2);
+    
     for (let i = 0; i < count; i++) {
-      const idx = (currentIndex + i) % items.length;
-      const isCenter = i === Math.floor(count / 2);
+      const offset = i - startOffset;
+      const idx = (currentIndex + offset + items.length) % items.length;
+      const isCenter = i === startOffset;
       visible.push({ ...items[idx], originalIndex: idx, isCenter });
     }
     return visible;
   };
 
-  // Render project card - FIXED WIDTH
+  // Render project card
   const renderProjectCard = (item, isCenter) => {
     const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
     const screenshotUrl = getMediaUrl(item, 'screenshots');
     const videoUrl = getMediaUrl(item, 'video');
 
     return (
-      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}>
+      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl scale-105 z-20' : 'scale-95 opacity-80 hover:border-blue-400'}`}>
         {(screenshotUrl || videoUrl) && (
           <div 
             className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer"
@@ -492,10 +512,10 @@ const App1 = () => {
     );
   };
 
-  // Render certificate card - FIXED WIDTH
+  // Render certificate card
   const renderCertificateCard = (cert, isCenter) => {
     return (
-      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'}`}>
+      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl scale-105 z-20' : 'scale-95 opacity-80 hover:border-blue-400'}`}>
         {cert.certificate_image && (
           <div 
             className="relative h-48 overflow-hidden rounded-lg m-4 cursor-pointer group"
@@ -746,7 +766,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section - Carousel Style with Fixed Width */}
+      {/* Projects Section - Properly Centered Carousel */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -777,37 +797,26 @@ const App1 = () => {
             </div>
           </div>
           
-          {/* Projects Carousel - Fixed Width */}
+          {/* Projects Carousel - Centered */}
           <div className="relative w-full px-4">
             <div 
               ref={projectSliderRef}
-              className={`flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory ${
-                portfolio.projects.length === 1 ? 'justify-center' : ''
-              }`}
+              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory justify-center"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
             >
-              {portfolio.projects.length === 1 ? (
-                <div className="w-[280px] md:w-[320px] flex-shrink-0">
-                  {renderProjectCard(portfolio.projects[0], true)}
+              {visibleProjects.map((project, idx) => (
+                <div 
+                  key={idx} 
+                  className="w-[260px] md:w-[300px] lg:w-[320px] flex-shrink-0 snap-center transition-all duration-500 ease-in-out"
+                  style={{
+                    transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                  }}
+                >
+                  {renderProjectCard(project, project.isCenter)}
                 </div>
-              ) : (
-                visibleProjects.map((project, idx) => (
-                  <div 
-                    key={idx} 
-                    className="w-[260px] md:w-[300px] lg:w-[320px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out"
-                    style={{
-                      transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
-                      transform: project.isCenter ? 'scale(1.05)' : 'scale(0.95)',
-                      opacity: project.isCenter ? 1 : 0.8,
-                      zIndex: project.isCenter ? 20 : 10,
-                    }}
-                  >
-                    {renderProjectCard(project, project.isCenter)}
-                  </div>
-                ))
-              )}
+              ))}
             </div>
           </div>
 
@@ -843,7 +852,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Certificates Section - Carousel Style with Fixed Width */}
+      {/* Certificates Section - Properly Centered Carousel */}
       {visibleCertificates.length > 0 && (
         <section ref={sectionRefs.certificates} id="certificates" className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
@@ -874,37 +883,26 @@ const App1 = () => {
             </div>
           </div>
 
-          {/* Certificates Carousel - Fixed Width */}
+          {/* Certificates Carousel - Centered */}
           <div className="relative w-full px-4">
             <div 
               ref={certificateSliderRef}
-              className={`flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory ${
-                visibleCertificates.length === 1 ? 'justify-center' : ''
-              }`}
+              className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 snap-x snap-mandatory justify-center"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
             >
-              {visibleCertificates.length === 1 ? (
-                <div className="w-[240px] md:w-[280px] flex-shrink-0">
-                  {renderCertificateCard(visibleCertificates[0], true)}
+              {visibleCertificates.map((cert, idx) => (
+                <div 
+                  key={idx} 
+                  className="w-[220px] md:w-[250px] lg:w-[280px] flex-shrink-0 snap-center transition-all duration-500 ease-in-out"
+                  style={{
+                    transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                  }}
+                >
+                  {renderCertificateCard(cert, cert.isCenter)}
                 </div>
-              ) : (
-                visibleCertificates.map((cert, idx) => (
-                  <div 
-                    key={idx} 
-                    className="w-[220px] md:w-[250px] lg:w-[280px] flex-shrink-0 snap-start transition-all duration-500 ease-in-out"
-                    style={{
-                      transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
-                      transform: cert.isCenter ? 'scale(1.05)' : 'scale(0.95)',
-                      opacity: cert.isCenter ? 1 : 0.8,
-                      zIndex: cert.isCenter ? 20 : 10,
-                    }}
-                  >
-                    {renderCertificateCard(cert, cert.isCenter)}
-                  </div>
-                ))
-              )}
+              ))}
             </div>
           </div>
 
