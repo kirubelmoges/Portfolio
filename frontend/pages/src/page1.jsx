@@ -366,157 +366,46 @@ const App1 = () => {
     return `${MEDIA_URL}/media/${filePath}`;
   };
 
-  // Function to get Resume and CV from both models
-  const getResumeAndCVItems = () => {
-    const items = [];
-    const seenUrls = new Set();
-    
-    // 1. FIRST: Check Certificate model - specifically ID 26 (CV) and ID 27 (Resume)
-    const certs = portfolio.certificates || [];
-    certs.forEach(cert => {
-      // Check if certificate has a cv file
-      if (cert.cv) {
-        let fileUrl = cert.cv;
-        
-        // Determine type based on ID
-        let type = 'cv';
-        let displayName = cert.certificate_name || 'CV';
-        
-        // ID 27 is Resume
-        if (cert.id === 27) {
-          type = 'resume';
-          displayName = 'Resume';
-        }
-        // ID 26 is CV
-        else if (cert.id === 26) {
-          type = 'cv';
-          displayName = 'CV';
-        }
-        
-        if (fileUrl && !seenUrls.has(fileUrl)) {
-          seenUrls.add(fileUrl);
-          items.push({
-            id: `cert-${cert.id}`,
-            name: displayName,
-            type: type,
-            fileUrl: fileUrl,
-            source: 'certificate_model',
-            certId: cert.id
-          });
-        }
-      }
-    });
-    
-    // 2. SECOND: Check Resume model
+  // Get the Cloudinary Resume entry (the one with resume_file_url)
+  const getCloudinaryResumeEntry = () => {
     const resumeData = portfolio.resume || [];
-    resumeData.forEach(item => {
-      // Check for Resume file
-      const resumeFile = item.resume_file_url || item.resume_file;
-      if (resumeFile && !seenUrls.has(resumeFile)) {
-        seenUrls.add(resumeFile);
-        items.push({
-          id: `resume-${item.id}-resume`,
-          name: item.resume_name || 'Resume',
-          type: 'resume',
-          fileUrl: resumeFile,
-          source: 'resume_model'
-        });
-      }
-      
-      // Check for CV file
-      const cvFile = item.cv_file_url || item.cv_file;
-      if (cvFile && !seenUrls.has(cvFile)) {
-        seenUrls.add(cvFile);
-        items.push({
-          id: `resume-${item.id}-cv`,
-          name: item.resume_name || 'CV',
-          type: 'cv',
-          fileUrl: cvFile,
-          source: 'resume_model'
-        });
-      }
-    });
-    
-    return items;
+    // Find the entry that has resume_file_url (Cloudinary URL)
+    return resumeData.find(item => item.resume_file_url && item.resume_file_url.includes('cloudinary'));
   };
 
-  // Get Resume and CV items
-  const resumeCVItems = getResumeAndCVItems();
-
-  // Get specific items for the download buttons in hero
-  const getResumeFile = () => {
-    const items = getResumeAndCVItems();
-    return items.find(item => item.type === 'resume');
-  };
-
-  const getCVFile = () => {
-    const items = getResumeAndCVItems();
-    return items.find(item => item.type === 'cv');
-  };
-
-  const handleDownloadResume = async () => {
-    // Get Resume from Certificate ID 27
-    const certs = portfolio.certificates || [];
-    const resumeCert = certs.find(cert => cert.id === 27);
-    
-    if (!resumeCert || !resumeCert.cv) {
-      alert('Resume file not found.');
+  const handleDownloadResume = () => {
+    const entry = getCloudinaryResumeEntry();
+    if (!entry || !entry.resume_file_url) {
+      alert('Resume file not found in Cloudinary.');
       return;
     }
-
+    
     setDownloadingResume(true);
     try {
-      // Construct the full URL
-      let fileUrl = resumeCert.cv;
-      
-      // If it's a relative path, prepend the MEDIA_URL
-      if (fileUrl && !fileUrl.startsWith('http://') && !fileUrl.startsWith('https://')) {
-        if (fileUrl.startsWith('/')) {
-          fileUrl = fileUrl.substring(1);
-        }
-        fileUrl = `${MEDIA_URL}/${fileUrl}`;
-      }
-      
-      // Open in new tab to view/download
-      window.open(fileUrl, '_blank');
-      
+      // Open in new tab
+      window.open(entry.resume_file_url, '_blank');
     } catch (error) {
-      console.error('Error downloading resume:', error);
-      alert('Error downloading file. Please try again.');
+      console.error('Error opening resume:', error);
+      alert('Error opening file. Please try again.');
     } finally {
       setDownloadingResume(false);
     }
   };
 
-  const handleDownloadCV = async () => {
-    // Get CV from Certificate ID 26
-    const certs = portfolio.certificates || [];
-    const cvCert = certs.find(cert => cert.id === 26);
-    
-    if (!cvCert || !cvCert.cv) {
-      alert('CV file not found.');
+  const handleDownloadCV = () => {
+    const entry = getCloudinaryResumeEntry();
+    if (!entry || !entry.cv_file_url) {
+      alert('CV file not found in Cloudinary.');
       return;
     }
-
+    
     setDownloadingCV(true);
     try {
-      // Construct the full URL
-      let fileUrl = cvCert.cv;
-      
-      // If it's a relative path, prepend the MEDIA_URL
-      if (fileUrl && !fileUrl.startsWith('http://') && !fileUrl.startsWith('https://')) {
-        if (fileUrl.startsWith('/')) {
-          fileUrl = fileUrl.substring(1);
-        }
-        fileUrl = `${MEDIA_URL}/${fileUrl}`;
-      }
-      
-      // Open in new tab to view/download
-      window.open(fileUrl, '_blank');
-      
+      // Open in new tab
+      window.open(entry.cv_file_url, '_blank');
     } catch (error) {
-      console.error('Error downloading CV:', error);
-      alert('Error downloading file. Please try again.');
+      console.error('Error opening CV:', error);
+      alert('Error opening file. Please try again.');
     } finally {
       setDownloadingCV(false);
     }
@@ -777,6 +666,9 @@ const App1 = () => {
   const projectCards = getProjectCards();
   const certificateCards = getCertificateCards();
 
+  // Get Cloudinary Resume entry
+  const cloudinaryEntry = getCloudinaryResumeEntry();
+
   return (
     <div className="bg-white">
       {/* Navigation Bar */}
@@ -904,14 +796,14 @@ const App1 = () => {
                   disabled={downloadingResume}
                   className="px-5 py-1.5 border-2 border-blue-600 text-blue-600 rounded-full hover:bg-blue-50 transition-all duration-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {downloadingResume ? 'Downloading...' : 'Download Resume'}
+                  {downloadingResume ? 'Opening...' : 'View Resume'}
                 </button>
                 <button 
                   onClick={handleDownloadCV}
                   disabled={downloadingCV}
                   className="px-5 py-1.5 border-2 border-green-600 text-green-600 rounded-full hover:bg-green-50 transition-all duration-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {downloadingCV ? 'Downloading...' : 'Download CV'}
+                  {downloadingCV ? 'Opening...' : 'View CV'}
                 </button>
               </div>
             </div>
@@ -1115,53 +1007,61 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Resume Section - Shows from both models */}
-      {resumeCVItems.length > 0 && (
+      {/* Resume Section - Shows the Cloudinary Resume entry */}
+      {cloudinaryEntry && (
         <section ref={sectionRefs.resume} id="resume" className="py-10 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Resume & CV</h2>
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {resumeCVItems.map((item, index) => {
-                // Construct full URL if needed
-                let fileUrl = item.fileUrl;
-                if (fileUrl && !fileUrl.startsWith('http://') && !fileUrl.startsWith('https://')) {
-                  if (fileUrl.startsWith('/')) {
-                    fileUrl = fileUrl.substring(1);
-                  }
-                  fileUrl = `${MEDIA_URL}/${fileUrl}`;
-                }
-                
-                return (
-                  <div key={index} className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">
-                      {item.name}
-                      {item.certId === 27 && (
-                        <span className="text-xs text-blue-600 ml-2">⭐ Resume</span>
-                      )}
-                      {item.certId === 26 && (
-                        <span className="text-xs text-green-600 ml-2">📄 CV</span>
-                      )}
-                    </h3>
-                    {fileUrl && (
-                      <a 
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex items-center space-x-2 transition ${item.type === 'resume' ? 'text-blue-600 hover:text-blue-800' : 'text-green-600 hover:text-green-800'}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.open(fileUrl, '_blank');
-                        }}
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <span>Download {item.type === 'resume' ? 'Resume' : 'CV'}</span>
-                      </a>
-                    )}
-                  </div>
-                );
-              })}
+              {/* Resume Card */}
+              {cloudinaryEntry.resume_file_url && (
+                <div className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    {cloudinaryEntry.resume_name || 'Resume'}
+                    <span className="text-xs text-blue-600 ml-2">📄 Resume</span>
+                  </h3>
+                  <a 
+                    href={cloudinaryEntry.resume_file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open(cloudinaryEntry.resume_file_url, '_blank');
+                    }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>View Resume</span>
+                  </a>
+                </div>
+              )}
+              
+              {/* CV Card */}
+              {cloudinaryEntry.cv_file_url && (
+                <div className="bg-white/50 backdrop-blur-sm rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    {cloudinaryEntry.resume_name || 'CV'}
+                    <span className="text-xs text-green-600 ml-2">📄 CV</span>
+                  </h3>
+                  <a 
+                    href={cloudinaryEntry.cv_file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 text-green-600 hover:text-green-800 transition"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open(cloudinaryEntry.cv_file_url, '_blank');
+                    }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>View CV</span>
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </section>
