@@ -1055,49 +1055,53 @@ const App1 = () => {
             )}
 
             <div className="relative w-full">
-              {isMobile ? (
-                /* MOBILE VIEW: Side cards touch the center card exactly */
-                <div className="flex justify-center items-center relative py-10" style={{ minHeight: '400px' }}>
-                  {/* Center Anchor Card */}
-                  <div className="w-[75%] max-w-[320px] relative z-20 shadow-2xl">
-                    <CertificateCard 
-                      cert={certificateCards.center}
-                      isCenter={true}
-                      onImageClick={openImageZoom}
-                      getMediaUrl={getMediaUrl}
-                    />
-                    
-                    {/* Left Card - Pinned to left edge of center */}
-                    {certificateCards.left && (
-                      <div className="absolute top-0 mr-1  h-full  z-10 pointer-events-none">
-                        <div className="transform scale-90 origin-right opacity-40 blur-[2px]">
-                          <CertificateCard 
-                            cert={certificateCards.left}
-                            isCenter={false}
-                            isBlurred={true}
-                            onImageClick={openImageZoom}
-                            getMediaUrl={getMediaUrl}
-                          />
-                        </div>
-                      </div>
-                    )}
+  {isMobile ? (
+    <div
+      className="flex justify-center items-center relative py-10"
+      style={{ minHeight: "400px" }}
+    >
+      {/* Center Card */}
+      <div className="w-[75%] max-w-[320px] relative z-20 shadow-2xl">
+        <CertificateCard
+          cert={certificateCards.center}
+          isCenter={true}
+          onImageClick={openImageZoom}
+          getMediaUrl={getMediaUrl}
+        />
 
-                    {/* Right Card - Pinned to right edge of center */}
-                    {certificateCards.right && (
-                      <div className="absolute top-0 ml-1 h-full z-10 pointer-events-none">
-                        <div className="transform scale-90 origin-left opacity-40 blur-[2px]">
-                          <CertificateCard 
-                            cert={certificateCards.right}
-                            isCenter={false}
-                            isBlurred={true}
-                            onImageClick={openImageZoom}
-                            getMediaUrl={getMediaUrl}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+        {/* LEFT CARD */}
+        {certificateCards.left && (
+          <div className="absolute top-0 right-[92%] w-full h-full z-10 pointer-events-none">
+            <div className="transform scale-90 origin-right opacity-40 blur-[2px]">
+              <CertificateCard
+                cert={certificateCards.left}
+                isCenter={false}
+                isBlurred={true}
+                onImageClick={openImageZoom}
+                getMediaUrl={getMediaUrl}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* RIGHT CARD */}
+        {certificateCards.right && (
+          <div className="absolute top-0 left-[92%] w-full h-full z-10 pointer-events-none">
+            <div className="transform scale-90 origin-left opacity-40 blur-[2px]">
+              <CertificateCard
+                cert={certificateCards.right}
+                isCenter={false}
+                isBlurred={true}
+                onImageClick={openImageZoom}
+                getMediaUrl={getMediaUrl}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null}
+</div>
               ) : (
                 /* DESKTOP VIEW */
                 <div 
