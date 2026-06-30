@@ -21,7 +21,7 @@ const EMAILJS_PUBLIC_KEY = 'HyWhBsjTEX4w85hEs';
 // Fallback email
 const CONTACT_EMAIL = 'primeforthekms@gmail.com';
 
-// Project Card Component
+// Project Card Component - Fixed hover overflow issue
 const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoClick, getMediaUrl }) => {
   const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
   const screenshotUrl = getMediaUrl(item, 'screenshots');
@@ -31,6 +31,11 @@ const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoC
   return (
     <div 
       className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'} ${isBlurred ? 'blur-sm opacity-40 scale-75' : ''}`}
+      style={{
+        transform: isBlurred ? 'scale(0.75)' : 'scale(1)',
+        opacity: isBlurred ? 0.4 : 1,
+        transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease, box-shadow 0.3s ease',
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -49,7 +54,7 @@ const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoC
             <img
               src={screenshotUrl}
               alt={item.project_title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               onError={(e) => {
                 const fallback = item.screenshots;
                 if (fallback) {
@@ -90,6 +95,7 @@ const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoC
           {item.project_title}
         </h3>
         
+        {/* Description - Always visible with 2 lines, expands on hover */}
         <div className="overflow-hidden">
           <p className={`text-gray-600 mb-3 transition-all duration-300 ${
             isHovered ? 'line-clamp-none' : 'line-clamp-2'
@@ -98,6 +104,7 @@ const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoC
           </p>
         </div>
         
+        {/* Tools - Always visible with 1 line, expands on hover */}
         <div className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${
           isHovered ? 'max-h-40 opacity-100' : 'max-h-8 opacity-100'
         }`}>
@@ -113,14 +120,27 @@ const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoC
           )}
         </div>
         
+        {/* GitHub and Live Demo - Always visible and accessible */}
         <div className="flex gap-4 mt-4">
           {item.github_link && (
-            <a href={item.github_link} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition">
+            <a 
+              href={item.github_link} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
               GitHub
             </a>
           )}
           {item.url && (
-            <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition">
+            <a 
+              href={item.url} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
               Live Demo
             </a>
           )}
@@ -861,9 +881,9 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section */}
+      {/* Projects Section - Fixed overflow issue */}
       {portfolio.projects?.length > 0 && (
-        <section ref={sectionRefs.projects} id="projects" className="py-10 bg-white/50 backdrop-blur-sm overflow-hidden">
+        <section ref={sectionRefs.projects} id="projects" className="py-10 bg-white/50 backdrop-blur-sm overflow-visible">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">Featured Projects</h2>
             
@@ -888,9 +908,9 @@ const App1 = () => {
               </button>
             </div>
 
-            <div className="relative w-full">
+            <div className="relative w-full overflow-visible">
               {isMobile ? (
-                <div className="flex justify-center items-center relative py-4 h-[380px]">
+                <div className="flex justify-center items-center relative py-4 h-[420px]">
                   <div className="w-[75%] max-w-[300px] relative z-20">
                     <ProjectCard item={projectCards.center} isCenter={true} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
                     
@@ -912,18 +932,19 @@ const App1 = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-4 overflow-visible pb-4 justify-center items-start h-[480px]">
+                <div className="flex gap-4 overflow-visible pb-4 justify-center items-start h-[520px]">
                   {projectCards.map((p, idx) => (
                     <div 
                       key={idx}
-                      className="flex-shrink-0 transition-all duration-500"
+                      className="flex-shrink-0 transition-all duration-500 overflow-visible"
                       style={{
                         width: p.isCenter ? '320px' : '260px',
                         transform: `scale(${p.scale}) translateY(${p.translateY}px)`,
                         opacity: p.opacity,
                         zIndex: p.zIndex,
                         filter: p.blur,
-                        pointerEvents: p.isCenter ? 'auto' : 'none'
+                        pointerEvents: p.isCenter ? 'auto' : 'none',
+                        transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, filter 0.5s ease'
                       }}
                     >
                       <ProjectCard item={p} isCenter={p.isCenter} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
