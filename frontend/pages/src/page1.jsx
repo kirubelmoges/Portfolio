@@ -21,7 +21,7 @@ const EMAILJS_PUBLIC_KEY = 'HyWhBsjTEX4w85hEs';
 // Fallback email
 const CONTACT_EMAIL = 'primeforthekms@gmail.com';
 
-// Project Card Component - Fixed hover overflow issue
+// Project Card Component - With scrollable content below fixed image
 const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoClick, getMediaUrl }) => {
   const toolsList = item.tools_used ? item.tools_used.split(',').map(t => t.trim()) : [];
   const screenshotUrl = getMediaUrl(item, 'screenshots');
@@ -30,7 +30,7 @@ const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoC
 
   return (
     <div 
-      className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'} ${isBlurred ? 'blur-sm opacity-40 scale-75' : ''}`}
+      className={`bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 group h-full w-full flex flex-col ${isCenter ? 'border-blue-400 shadow-2xl' : 'hover:border-blue-400'} ${isBlurred ? 'blur-sm opacity-40 scale-75' : ''}`}
       style={{
         transform: isBlurred ? 'scale(0.75)' : 'scale(1)',
         opacity: isBlurred ? 0.4 : 1,
@@ -39,9 +39,10 @@ const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoC
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Fixed Image Section */}
       {(screenshotUrl || videoUrl) && (
         <div 
-          className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer"
+          className="relative h-52 overflow-hidden bg-gray-100 cursor-pointer flex-shrink-0"
           onClick={() => {
             if (videoUrl && !screenshotUrl) {
               onVideoClick(videoUrl, item.project_title);
@@ -90,60 +91,72 @@ const ProjectCard = ({ item, isCenter, isBlurred = false, onImageClick, onVideoC
           )}
         </div>
       )}
-      <div className="p-6">
-        <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2 break-words`}>
+      
+      {/* Scrollable Content Section */}
+      <div className="p-6 flex-1 flex flex-col min-h-0">
+        {/* Title - Fixed */}
+        <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${isCenter ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'} line-clamp-2 break-words flex-shrink-0`}>
           {item.project_title}
         </h3>
         
-        {/* Description - Always visible with 2 lines, expands on hover */}
-        <div className="overflow-hidden">
-          <p className={`text-gray-600 mb-3 transition-all duration-300 ${
-            isHovered ? 'line-clamp-none' : 'line-clamp-2'
+        {/* Scrollable Content - Description, Tools, and Buttons */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-1 space-y-3">
+          {/* Description */}
+          <div className="overflow-hidden">
+            <p className={`text-gray-600 transition-all duration-300 ${
+              isHovered ? 'line-clamp-none' : 'line-clamp-2'
+            }`}>
+              {item.description}
+            </p>
+          </div>
+          
+          {/* Tools */}
+          <div className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${
+            isHovered ? 'max-h-40 opacity-100' : 'max-h-8 opacity-100'
           }`}>
-            {item.description}
-          </p>
-        </div>
-        
-        {/* Tools - Always visible with 1 line, expands on hover */}
-        <div className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${
-          isHovered ? 'max-h-40 opacity-100' : 'max-h-8 opacity-100'
-        }`}>
-          {toolsList.slice(0, isHovered ? toolsList.length : 3).map((tool, idx) => (
-            <span key={idx} className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50 hover:border-blue-400 transition-all duration-300">
-              {tool}
-            </span>
-          ))}
-          {!isHovered && toolsList.length > 3 && (
-            <span className="px-2 py-1 text-gray-500 rounded text-xs">
-              +{toolsList.length - 3} more
-            </span>
-          )}
-        </div>
-        
-        {/* GitHub and Live Demo - Always visible and accessible */}
-        <div className="flex gap-4 mt-4">
-          {item.github_link && (
-            <a 
-              href={item.github_link} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-300"
-              onClick={(e) => e.stopPropagation()}
-            >
-              GitHub
-            </a>
-          )}
-          {item.url && (
-            <a 
-              href={item.url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-300"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Live Demo
-            </a>
-          )}
+            {toolsList.slice(0, isHovered ? toolsList.length : 3).map((tool, idx) => (
+              <span key={idx} className="px-2 py-1 bg-gray-200/70 text-gray-700 rounded text-xs border border-gray-300/50 hover:border-blue-400 transition-all duration-300 flex-shrink-0">
+                {tool}
+              </span>
+            ))}
+            {!isHovered && toolsList.length > 3 && (
+              <span className="px-2 py-1 text-gray-500 rounded text-xs flex-shrink-0">
+                +{toolsList.length - 3} more
+              </span>
+            )}
+          </div>
+          
+          {/* GitHub and Live Demo - Inside scrollable area */}
+          <div className="flex gap-4 pt-2 pb-1 flex-shrink-0">
+            {item.github_link && (
+              <a 
+                href={item.github_link} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-300 inline-flex items-center gap-1.5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                </svg>
+                GitHub
+              </a>
+            )}
+            {item.url && (
+              <a 
+                href={item.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-300 inline-flex items-center gap-1.5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Live Demo
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -881,7 +894,7 @@ const App1 = () => {
         </section>
       )}
 
-      {/* Projects Section - Fixed overflow issue */}
+      {/* Projects Section - With scrollable cards */}
       {portfolio.projects?.length > 0 && (
         <section ref={sectionRefs.projects} id="projects" className="py-10 bg-white/50 backdrop-blur-sm overflow-visible">
           <div className="container mx-auto px-4">
@@ -910,8 +923,8 @@ const App1 = () => {
 
             <div className="relative w-full overflow-visible">
               {isMobile ? (
-                <div className="flex justify-center items-center relative py-4 h-[420px]">
-                  <div className="w-[75%] max-w-[300px] relative z-20">
+                <div className="flex justify-center items-start relative py-4 h-[520px]">
+                  <div className="w-[75%] max-w-[300px] relative z-20 h-full">
                     <ProjectCard item={projectCards.center} isCenter={true} onImageClick={openImageZoom} onVideoClick={openVideoFullscreen} getMediaUrl={getMediaUrl} />
                     
                     {projectCards.left && (
@@ -932,13 +945,14 @@ const App1 = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-4 overflow-visible pb-4 justify-center items-start h-[520px]">
+                <div className="flex gap-4 overflow-visible pb-4 justify-center items-start h-[600px]">
                   {projectCards.map((p, idx) => (
                     <div 
                       key={idx}
-                      className="flex-shrink-0 transition-all duration-500 overflow-visible"
+                      className="flex-shrink-0 transition-all duration-500 overflow-visible h-full"
                       style={{
-                        width: p.isCenter ? '320px' : '260px',
+                        width: p.isCenter ? '340px' : '280px',
+                        height: '100%',
                         transform: `scale(${p.scale}) translateY(${p.translateY}px)`,
                         opacity: p.opacity,
                         zIndex: p.zIndex,
