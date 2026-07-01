@@ -9,7 +9,7 @@ const MEDIA_URL = 'https://portfolio-backend-ee1z.onrender.com';
 // HARDCODED RESUME & CV LINKS (from Uploadcare)
 // ============================================================
 const RESUME_URL = 'https://10hju069v9.ucarecd.net/21ed3b13-3d65-4c68-a006-33c32c1368f7/resume.pdf'; // Resume
-const CV_URL = 'https://10hju069v9.ucarecd.net/359830e9-b254-4241-85a3-b34743f7fc59/cv.pdf'; // CV
+const CV_URL = 'https://10hju069v9.ucarecd.net/72cd2e87-74de-4dcb-848a-a994ea31cb7e/KIRUBELMOGESCV.pdf'; // CV - UPDATED
 
 // ============================================================
 // EMAILJS CONFIGURATION - ALL CREDENTIALS SET
